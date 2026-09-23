@@ -1,0 +1,72 @@
+{
+  "rules": {
+    "keys": {
+      "$id": {
+        ".read": false,
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.isString() && newData.val().length >= 20"
+      }
+    },
+    "convos": {
+      "$id": {
+        ".read": true,
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.hasChildren(['title', 'when', 'cupo', 'createdAt'])",
+        "title": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+        },
+        "when": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        },
+        "place": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "cupo": {
+          ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 60"
+        },
+        "createdAt": {
+          ".validate": "newData.val() == now"
+        },
+        "players": {
+          "$p": {
+            ".write": "auth != null && ((!data.exists() && newData.child('uid').val() == auth.uid) || (data.exists() && newData.exists() && (data.child('uid').val() == auth.uid || (root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()))))",
+            ".validate": "newData.hasChildren(['name', 'uid', 'ts']) && (!data.child('out').exists() || newData.child('out').val() == data.child('out').val())",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && (!data.exists() || newData.val() == data.val())"
+            },
+            "uid": {
+              ".validate": "!data.exists() || newData.val() == data.val()"
+            },
+            "ts": {
+              ".validate": "(!data.exists() && newData.val() == now) || newData.val() == data.val()"
+            },
+            "arq": {
+              ".validate": "newData.isBoolean() && (!data.exists() || newData.val() == data.val())"
+            },
+            "guestOf": {
+              ".validate": "newData.isString() && newData.val().length <= 40 && (!data.exists() || newData.val() == data.val())"
+            },
+            "out": {
+              ".validate": "newData.val() == now || newData.val() == data.val()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "admins": {
+      "$id": {
+        "$uid": {
+          ".read": false,
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.val() == root.child('keys/' + $id).val()"
+        }
+      }
+    }
+  }
+}

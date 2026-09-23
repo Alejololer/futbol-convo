@@ -1,0 +1,6 @@
+.playwright-mcp/
+node_modules/
+.firebase/
+
+.vercel
+.claude/

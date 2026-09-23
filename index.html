@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Convocatoria ⚽</title>
+<meta name="description" content="Lista en vivo del partido: titulares, suplentes y bajas.">
+<meta property="og:title" content="Convocatoria ⚽">
+<meta property="og:description" content="Lista en vivo del partido: titulares, suplentes y bajas.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://futbol-convo.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0f5c2e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --card:#ffffff; --fg:#0f1a14; --muted:#5c6b62; --line:#dfe7e1; --soft:#f4f8f5;
+    --accent:#16a34a; --accent-fg:#fff; --amber:#d97706; --amber-soft:#fef3c7; --danger:#dc2626; --wa:#25d366;
+    --pitch1:#1b8544; --pitch2:#0f5c2e;
+    --shadow:0 1px 2px rgb(0 0 0 / .06), 0 12px 32px -14px rgb(0 0 0 / .45);
+    /* cancha vertical (celular) y horizontal (pantallas anchas) */
+    --lines:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 520' fill='none' stroke='white' stroke-opacity='.17' stroke-width='2'%3E%3Crect x='20' y='20' width='260' height='480' rx='3'/%3E%3Cpath d='M20 260H280'/%3E%3Ccircle cx='150' cy='260' r='44'/%3E%3Ccircle cx='150' cy='260' r='2.5' fill='white' fill-opacity='.17'/%3E%3Crect x='80' y='20' width='140' height='76'/%3E%3Crect x='115' y='20' width='70' height='28'/%3E%3Cpath d='M118 96A40 40 0 0 0 182 96'/%3E%3Crect x='80' y='424' width='140' height='76'/%3E%3Crect x='115' y='472' width='70' height='28'/%3E%3Cpath d='M118 424A40 40 0 0 1 182 424'/%3E%3C/svg%3E");
+    --stripes:repeating-linear-gradient(180deg, rgb(255 255 255 / .04) 0 64px, transparent 64px 128px);
+  }
+  @media (orientation: landscape) and (min-width: 700px) {
+    :root {
+      --lines:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 300' fill='none' stroke='white' stroke-opacity='.15' stroke-width='2'%3E%3Crect x='20' y='20' width='480' height='260' rx='3'/%3E%3Cpath d='M260 20V280'/%3E%3Ccircle cx='260' cy='150' r='44'/%3E%3Ccircle cx='260' cy='150' r='2.5' fill='white' fill-opacity='.15'/%3E%3Crect x='20' y='80' width='76' height='140'/%3E%3Crect x='20' y='115' width='28' height='70'/%3E%3Cpath d='M96 118A40 40 0 0 1 96 182'/%3E%3Crect x='424' y='80' width='76' height='140'/%3E%3Crect x='472' y='115' width='28' height='70'/%3E%3Cpath d='M424 118A40 40 0 0 0 424 182'/%3E%3C/svg%3E");
+      --stripes:repeating-linear-gradient(90deg, rgb(255 255 255 / .035) 0 96px, transparent 96px 192px);
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --card:#111a14; --fg:#e7efe9; --muted:#8a9a90; --line:#1f2b23; --soft:#0d1510;
+      --accent:#22c55e; --accent-fg:#052e14; --amber:#f59e0b; --amber-soft:#2a1f06; --danger:#f87171;
+      --pitch1:#0d4424; --pitch2:#062414;
+      --shadow:0 1px 2px rgb(0 0 0 / .3), 0 12px 32px -14px rgb(0 0 0 / .8);
+    }
+  }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; color:var(--fg); background:var(--pitch2); font:16px/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; min-height:100vh; }
+  body::before { content:''; position:fixed; inset:0; z-index:-1;
+    background:var(--lines) center / cover no-repeat, var(--stripes), linear-gradient(170deg, var(--pitch1), var(--pitch2)); }
+  h1, h2 { font-family:'Bricolage Grotesque', Inter, system-ui, sans-serif; }
+
+  .layout { max-width:560px; margin:0 auto; padding:0 16px; }
+
+  /* ---------- Encabezado ---------- */
+  .hero { color:#fff; padding:28px 2px 22px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:5px 10px; border-radius:999px; background:rgb(255 255 255 / .14); backdrop-filter:blur(6px); }
+  .hero h1 { font-size:clamp(1.9rem, 7vw, 2.6rem); line-height:1.05; margin:.35em 0 .3em; font-weight:800; letter-spacing:-.02em; overflow-wrap:anywhere; }
+  .hero p { margin:0; opacity:.85; }
+  .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:.9rem; font-weight:500; padding:6px 11px; border-radius:10px; background:rgb(255 255 255 / .13); backdrop-filter:blur(6px); }
+  .chip.hot { background:#fde047; color:#422006; font-weight:700; }
+
+  .meter { margin-top:20px; }
+  .meter .nums { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .meter .big { font-family:'Bricolage Grotesque', sans-serif; font-size:2.4rem; font-weight:800; line-height:1; }
+  .meter .big small { font-size:1.1rem; opacity:.7; font-weight:600; }
+  .meter .lbl { font-size:.9rem; opacity:.85; text-align:right; }
+  .bar { height:10px; border-radius:99px; background:rgb(255 255 255 / .18); margin-top:10px; overflow:hidden; }
+  .bar > i { display:block; height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg, #86efac, #fde047); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+  .bar.full > i { background:linear-gradient(90deg, #fde047, #fb923c); }
+
+  /* ---------- Tarjetas y formularios ---------- */
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow:var(--shadow); }
+  .stack > * + * { margin-top:14px; }
+  label.f { display:block; margin:0 0 6px; font-size:.85rem; font-weight:600; color:var(--muted); }
+  input[type=text], input[type=number], input[type=datetime-local] {
+    width:100%; padding:13px 14px; font:inherit; font-size:1rem; border:1.5px solid var(--line); border-radius:12px; background:var(--soft); color:var(--fg);
+    transition:border-color .15s, box-shadow .15s; }
+  input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .toggle { display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border-radius:999px; border:1.5px solid var(--line); cursor:pointer; font-weight:600; font-size:.92rem; user-select:none; transition:all .15s; }
+  .toggle input { position:absolute; opacity:0; pointer-events:none; }
+  .toggle:has(input:checked) { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); }
+  .toggle:has(input:focus-visible) { box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; }
+  details.guest summary { list-style:none; cursor:pointer; }
+  details.guest summary::-webkit-details-marker { display:none; }
+  details.guest[open] summary { border-color:var(--amber); color:var(--amber); background:color-mix(in srgb, var(--amber) 12%, transparent); }
+  details.guest > div { margin-top:10px; }
+
+  button, .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 16px; font:inherit; font-weight:700; font-size:1rem;
+    border:0; border-radius:12px; background:var(--accent); color:var(--accent-fg); cursor:pointer; text-decoration:none; transition:transform .08s, filter .15s; }
+  button:hover, .btn:hover { filter:brightness(1.06); }
+  button:active, .btn:active { transform:scale(.98); }
+  button:disabled { opacity:.6; cursor:default; }
+  .full { width:100%; }
+  .btn.wa { background:var(--wa); color:#063; }
+  button.ghost { background:var(--card); color:var(--fg); border:1.5px solid var(--line); }
+  button.mini { padding:6px 11px; font-size:.8rem; font-weight:600; border-radius:9px; background:transparent; color:var(--muted); border:1.5px solid var(--line); }
+  button.mini:hover { color:var(--danger); border-color:var(--danger); }
+
+  .status { display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; font-weight:600; margin-bottom:14px; }
+  .status .ico { font-size:1.5rem; }
+  .status small { display:block; font-weight:500; color:var(--muted); }
+  .status.in { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .status.wait { background:var(--amber-soft); }
+  .status.fullmsg { background:var(--soft); }
+
+  details.join > summary { list-style:none; cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
+  details.join > summary::-webkit-details-marker { display:none; }
+  details.join > summary::after { content:'＋'; color:var(--accent); font-size:1.2rem; }
+  details.join[open] > summary::after { content:'－'; }
+  details.join[open] > summary { margin-bottom:12px; }
+
+  .admin { margin-top:14px; border:1.5px dashed var(--accent); }
+  .admin p { margin:.3em 0 .8em; color:var(--muted); font-size:.9rem; }
+
+  /* ---------- Listas ---------- */
+  .sec { display:flex; align-items:center; justify-content:space-between; margin:26px 4px 10px; color:#fff; }
+  .sec h2 { margin:0; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .count { font-size:.8rem; font-weight:700; padding:3px 9px; border-radius:99px; background:rgb(255 255 255 / .15); }
+  ol.list { list-style:none; margin:0; padding:6px; }
+  ol.list li { display:flex; align-items:center; gap:12px; padding:9px 10px; border-radius:12px; }
+  ol.list li + li { border-top:1px solid var(--line); }
+  ol.list li.mio { background:color-mix(in srgb, var(--accent) 9%, transparent); border-top-color:transparent; }
+  ol.list li.mio + li { border-top-color:transparent; }
+  .pos { width:26px; text-align:center; font-weight:700; font-size:.85rem; color:var(--muted); font-variant-numeric:tabular-nums; flex:none; }
+  .av { width:38px; height:38px; flex:none; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:.85rem; color:#fff; letter-spacing:.02em; position:relative; }
+  .av .glove { position:absolute; right:-4px; bottom:-4px; font-size:.85rem; background:var(--card); border-radius:50%; width:20px; height:20px; display:grid; place-items:center; box-shadow:0 0 0 2px var(--card); }
+  .who { flex:1; min-width:0; }
+  .who b { display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .who small { display:flex; flex-wrap:wrap; gap:6px; color:var(--muted); font-size:.78rem; margin-top:1px; }
+  .tag { font-size:.72rem; font-weight:700; padding:1px 7px; border-radius:6px; }
+  .tag.you { background:var(--accent); color:var(--accent-fg); }
+  .tag.inv { background:var(--amber-soft); color:var(--amber); }
+  li.vacio .av { background:transparent; border:2px dashed var(--line); color:var(--muted); font-size:1.1rem; }
+  li.vacio .who b { color:var(--muted); font-weight:500; }
+  li.vacio { cursor:pointer; }
+  #suplentes { border-color:color-mix(in srgb, var(--amber) 45%, var(--line)); }
+  #suplentes .pos { color:var(--amber); }
+  details.bajas summary { cursor:pointer; color:rgb(255 255 255 / .85); font-weight:600; margin:22px 4px 8px; }
+  details.bajas li .who b { text-decoration:line-through; color:var(--muted); }
+  details.bajas li .av { filter:grayscale(1); opacity:.5; }
+  .note { color:rgb(255 255 255 / .82); font-size:.85rem; text-align:center; margin:22px 8px 8px; }
+
+  li.nuevo { animation:pop .55s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { transform:translateY(-6px) scale(.97); opacity:0; background:color-mix(in srgb, var(--accent) 25%, transparent); } }
+
+  /* ---------- Botones de compartir ---------- */
+  .dock { position:sticky; bottom:0; z-index:5; padding:14px 0 calc(14px + env(safe-area-inset-bottom)); margin-top:10px;
+    background:linear-gradient(to top, rgb(0 0 0 / .35), transparent); }
+  .dock .row { display:flex; gap:10px; }
+  .dock .wa { flex:1.6; } .dock .ghost { flex:1; }
+
+  /* celular: todo en una columna, compartir al final y fijo abajo */
+  #convo { display:flex; flex-direction:column; }
+  .aside { display:contents; }
+  .hero { order:1; } .joinCard { order:2; } #adminBox { order:3; } .main { order:4; } .dock { order:5; }
+
+  /* pantallas anchas: dos columnas, la izquierda fija */
+  @media (min-width: 960px) {
+    .layout { max-width:1100px; padding:0 32px; }
+    #convo { display:grid; grid-template-columns:minmax(360px, 420px) 1fr; column-gap:48px; align-items:start; }
+    .aside { display:block; position:sticky; top:0; max-height:100vh; overflow-y:auto; scrollbar-width:none; padding-bottom:24px; }
+    .main { padding-top:18px; padding-bottom:40px; }
+    .dock { position:static; background:none; padding:0; margin-top:14px; }
+    #crear { max-width:560px; margin:0 auto; padding-top:6vh; }
+  }
+
+  #toast { position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); opacity:0; pointer-events:none;
+    background:var(--fg); color:var(--card); padding:11px 16px; border-radius:12px; font-weight:600; font-size:.92rem; box-shadow:var(--shadow);
+    transition:all .25s; z-index:10; max-width:calc(100% - 32px); text-align:center; }
+  #toast.on { opacity:1; transform:translate(-50%, 0); }
+
+  .loading { min-height:80vh; display:grid; place-items:center; text-align:center; color:rgb(255 255 255 / .85); }
+  .spin { font-size:3rem; display:inline-block; animation:roll 1.2s linear infinite; }
+  @keyframes roll { to { transform:rotate(360deg); } }
+
+  .burst { position:fixed; pointer-events:none; font-size:1.4rem; z-index:20; animation:fly 1s ease-out forwards; }
+  @keyframes fly { to { transform:translate(var(--dx), var(--dy)) rotate(var(--r)); opacity:0; } }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading"><div><div class="spin">⚽</div><p id="msg">Cargando…</p></div></div>
+
+<!-- ======== Crear ======== -->
+<section id="crear" class="layout" hidden>
+  <header class="hero">
+    <span class="pill">⚽ Nueva</span>
+    <h1>Arma la convocatoria</h1>
+    <p>Crea la lista, comparte el link y que cada uno se apunte solo.</p>
+  </header>
+  <form id="fCrear" class="card stack">
+    <div><label class="f" for="cTitle">Título</label>
+      <input id="cTitle" name="title" type="text" maxlength="80" required value="Convocatoria"></div>
+    <div><label class="f" for="cWhen">Fecha y hora</label>
+      <input id="cWhen" name="when" type="datetime-local" required></div>
+    <div class="grid2">
+      <div><label class="f" for="cPlace">Lugar</label>
+        <input id="cPlace" name="place" type="text" maxlength="80" value="Cancha 4"></div>
+      <div><label class="f" for="cCupo">Cupos</label>
+        <input id="cCupo" name="cupo" type="number" min="2" max="60" required value="16" inputmode="numeric"></div>
+    </div>
+    <button class="full">Crear y obtener link →</button>
+  </form>
+  <p class="note">Te llevará a tu <b>link de admin</b>. Guárdalo: con él puedes sacar gente de la lista.</p>
+</section>
+
+<!-- ======== Convocatoria ======== -->
+<section id="convo" class="layout" hidden>
+  <div class="aside">
+    <header class="hero">
+      <span class="pill">⚽ Convocatoria</span>
+      <h1 id="title"></h1>
+      <div class="meta">
+        <span class="chip" id="when"></span>
+        <span class="chip" id="place"></span>
+        <span class="chip hot" id="countdown" hidden></span>
+      </div>
+      <div class="meter">
+        <div class="nums">
+          <span class="big" id="cupos"></span>
+          <span class="lbl" id="cuposLbl"></span>
+        </div>
+        <div class="bar" id="bar"><i></i></div>
+      </div>
+    </header>
+
+    <div class="card joinCard">
+      <div id="status" class="status" hidden></div>
+      <details id="joinWrap" class="join" open>
+        <summary id="joinSum">Apúntate</summary>
+        <form id="fJoin" class="stack">
+          <div><label class="f" for="jName" id="jNameLbl">Tu nombre</label>
+            <input id="jName" name="name" type="text" maxlength="40" required autocomplete="nickname" placeholder="Como te conocen en el grupo"></div>
+          <div class="opts">
+            <label class="toggle"><input name="arq" type="checkbox"> 🧤 Arquero</label>
+            <details class="guest" id="guestWrap">
+              <summary class="toggle">🎟️ Es invitado</summary>
+              <div><label class="f" for="jGuest">¿Invitado de quién?</label>
+                <input id="jGuest" name="guestOf" type="text" maxlength="40" placeholder="Ej: Marcos"></div>
+            </details>
+          </div>
+          <button class="full" id="joinBtn">Apuntarme</button>
+        </form>
+      </details>
+    </div>
+
+    <div id="adminBox" class="card admin" hidden>
+      <b>🔑 Eres admin de esta convocatoria</b>
+      <p>Puedes sacar a cualquiera de la lista. Guarda <b>este</b> link y no lo compartas; al grupo mándale el normal con el botón verde.</p>
+      <button id="copyAdmin" class="ghost">Copiar mi link de admin</button>
+    </div>
+
+    <div class="dock">
+      <div class="row">
+        <a id="wa" class="btn wa" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
+          Enviar al grupo</a>
+        <button id="copyTxt" class="ghost">📋 Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sec"><h2>🟢 Titulares</h2><span class="count" id="titCount"></span></div>
+    <ol id="titulares" class="list card"></ol>
+
+    <div id="supBox" hidden>
+      <div class="sec"><h2>🟡 Suplentes</h2><span class="count" id="supCount"></span></div>
+      <ol id="suplentes" class="list card"></ol>
+    </div>
+
+    <details id="bajBox" class="bajas" hidden>
+      <summary id="bajSum"></summary>
+      <ol id="bajas" class="list card"></ol>
+    </details>
+
+    <p class="note">Los del grupo tienen prioridad; los invitados van después aunque se apunten antes. Si alguien se baja, el primer suplente sube solo.</p>
+  </div>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+import { getDatabase, ref, push, set, update, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
+import { ordenar, yaEsta, fechaLarga, textoWhatsApp } from './lista.js';
+
+// Config público por diseño: la seguridad está en database.rules.json.
+const firebaseConfig = {
+  apiKey: 'AIzaSyDfvCdvlQgvNoZRl-v113lyGccu88crZzs',
+  authDomain: 'futbolconvocatoria.firebaseapp.com',
+  databaseURL: 'https://futbolconvocatoria-default-rtdb.firebaseio.com',
+  projectId: 'futbolconvocatoria',
+  appId: '1:612877590807:web:a72d9f4a7500219f381752',
+};
+
+const $ = id => document.getElementById(id);
+const msg = t => { $('msg').textContent = t; };
+const store = {
+  get: k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+};
+let toastT;
+const toast = t => { $('toast').textContent = t; $('toast').classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => $('toast').classList.remove('on'), 2600); };
+const show = sec => { $('loading').hidden = true; $(sec).hidden = false; };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+await auth.authStateReady();
+const uid = (auth.currentUser || (await signInAnonymously(auth)).user).uid; // cuenta anónima e invisible: 1 por dispositivo
+
+const q = new URLSearchParams(location.search);
+const id = q.get('c');
+const adminKey = q.get('admin');
+
+if (!id) crear(); else ver();
+
+function crear() {
+  show('crear');
+  // próximo lunes 20:00 por defecto
+  const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); d.setHours(20, 0, 0, 0);
+  $('cWhen').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  for (const k of ['title', 'place', 'cupo']) if (store.get('ultima.' + k)) $('fCrear')[k].value = store.get('ultima.' + k);
+
+  $('fCrear').onsubmit = async e => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    const nuevo = crypto.randomUUID().slice(0, 8), key = crypto.randomUUID();
+    e.target.querySelector("button").disabled = true;
+    try {
+      await update(ref(db), {
+        [`keys/${nuevo}`]: key,
+        [`convos/${nuevo}`]: { title: f.title.trim(), when: f.when, place: f.place.trim(), cupo: +f.cupo, createdAt: serverTimestamp() },
+      });
+      for (const k of ['title', 'place', 'cupo']) store.set('ultima.' + k, f[k]);
+      location.search = `?c=${nuevo}&admin=${key}`;
+    } catch (err) { toast('No se pudo crear: ' + err.message); e.target.querySelector("button").disabled = false; }
+  };
+}
+
+function ver() {
+  const shareUrl = `${location.origin}${location.pathname}?c=${id}`;
+  let isAdmin = false, convo = null, seen = null, yoAntes;
+
+  if (adminKey) set(ref(db, `admins/${id}/${uid}`), adminKey)
+    .then(() => { isAdmin = true; $('adminBox').hidden = false; if (convo) render(); })
+    .catch(() => toast('Link de admin inválido'));
+  $('copyAdmin').onclick = () => copiar(location.href, 'Link de admin copiado 🔑');
+
+  $('fJoin').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, name = f.name.value.trim(), guestOf = $('guestWrap').open ? f.guestOf.value.trim() : '';
+    if (!name) return;
+    if ($('guestWrap').open && !guestOf) return toast('Pon de quién es invitado');
+    if (yaEsta(convo.players, name)) return toast(`"${name}" ya está en la lista`);
+    const p = { name, arq: f.arq.checked, uid, ts: serverTimestamp() };
+    if (guestOf) p.guestOf = guestOf; else store.set('nombre', name);
+    $('joinBtn').disabled = true;
+    try {
+      await push(ref(db, `convos/${id}/players`), p);
+      festejo($('joinBtn'));
+      toast(guestOf ? `${name} apuntado como invitado 🎟️` : '¡Estás en la lista! ⚽');
+      f.arq.checked = false; f.guestOf.value = ''; $('guestWrap').open = false; f.name.value = '';
+    } catch (err) { toast('No se pudo apuntar: ' + err.message); }
+    $('joinBtn').disabled = false;
+  };
+
+  $('copyTxt').onclick = () => copiar(textoWhatsApp(convo, ordenar(convo.players, convo.cupo), shareUrl), 'Lista copiada, pégala en el grupo 📋');
+
+  onValue(ref(db, `convos/${id}`), snap => {
+    convo = snap.val();
+    if (!convo) { $('loading').querySelector('.spin').textContent = '🤷'; return msg('Esta convocatoria no existe. Revisa el link.'); }
+    render();
+  }, err => msg('Error: ' + err.message));
+
+  function render() {
+    show('convo');
+    const r = ordenar(convo.players, convo.cupo);
+    const lleno = r.titulares.length >= convo.cupo;
+    document.title = `${convo.title} ⚽ ${r.titulares.length}/${convo.cupo}`;
+    $('title').textContent = convo.title;
+    $('when').textContent = '📅 ' + fechaLarga(convo.when);
+    $('place').textContent = '📍 ' + (convo.place || 'Por definir');
+    const cd = cuenta(convo.when);
+    $('countdown').hidden = !cd; $('countdown').textContent = cd;
+    $('cupos').innerHTML = `${r.titulares.length}<small> / ${convo.cupo}</small>`;
+    $('cuposLbl').textContent = lleno ? (r.suplentes.length ? `¡Completo! +${r.suplentes.length} en espera` : '¡Completo!') : `Faltan ${convo.cupo - r.titulares.length}`;
+    $('bar').classList.toggle('full', lleno);
+    $('bar').firstElementChild.style.width = Math.min(100, r.titulares.length / convo.cupo * 100) + '%';
+    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(textoWhatsApp(convo, r, shareUrl));
+
+    // Mi estado
+    const yo = [...r.titulares.map((p, i) => ({ p, sup: false, n: i + 1 })), ...r.suplentes.map((p, i) => ({ p, sup: true, n: i + 1 }))]
+      .find(x => x.p.uid === uid && !x.p.guestOf);
+    const st = $('status');
+    st.hidden = false;
+    if (yo && !yo.sup) { st.className = 'status in'; st.innerHTML = `<span class="ico">✅</span><div>Estás dentro — titular #${yo.n}<small>Si no puedes ir, bájate desde la lista para que suba otro.</small></div>`; }
+    else if (yo) { st.className = 'status wait'; st.innerHTML = `<span class="ico">⏳</span><div>Estás en espera — suplente #${yo.n}<small>Si alguien se baja, subes solo.</small></div>`; }
+    else if (lleno) { st.className = 'status fullmsg'; st.innerHTML = `<span class="ico">🟡</span><div>La lista está llena<small>Si te apuntas quedas como suplente.</small></div>`; }
+    else st.hidden = true;
+    const soyYo = !!yo;
+    if (soyYo !== yoAntes) { // solo en cambios, para no pisar lo que se está escribiendo
+      $('joinWrap').open = !soyYo;
+      $('joinSum').textContent = soyYo ? 'Apuntar a alguien más' : 'Apúntate';
+      $('jNameLbl').textContent = soyYo ? 'Nombre' : 'Tu nombre';
+      $('jName').value = soyYo ? '' : store.get('nombre');
+      yoAntes = soyYo;
+    }
+    $('joinBtn').textContent = lleno ? 'Apuntarme como suplente' : 'Apuntarme';
+
+    const vacios = Array.from({ length: Math.max(0, convo.cupo - r.titulares.length) }, () => null);
+    $('titulares').replaceChildren(...[...r.titulares, ...vacios].map((p, i) => fila(p, i + 1)));
+    $('suplentes').replaceChildren(...r.suplentes.map((p, i) => fila(p, 'S' + (i + 1))));
+    $('bajas').replaceChildren(...r.bajas.map(p => fila(p, '', true)));
+    $('titCount').textContent = `${r.titulares.length}/${convo.cupo}`;
+    $('supCount').textContent = r.suplentes.length;
+    $('supBox').hidden = !r.suplentes.length;
+    $('bajBox').hidden = !r.bajas.length;
+    $('bajSum').textContent = `Bajas (${r.bajas.length})`;
+    seen = new Set(Object.keys(convo.players || {}));
+  }
+
+  function fila(p, n, baja) {
+    const el = (tag, cls, t) => Object.assign(document.createElement(tag), { className: cls || '', textContent: t ?? '' });
+    const li = el('li');
+    li.append(el('span', 'pos', n));
+    if (!p) {
+      li.className = 'vacio';
+      li.append(el('span', 'av', '+'), Object.assign(el('div', 'who'), { innerHTML: '<b>Cupo libre</b>' }));
+      li.onclick = () => { $('joinWrap').open = true; $('jName').focus(); };
+      return li;
+    }
+    if (seen && !seen.has(p.id)) li.classList.add('nuevo');
+    const av = el('span', 'av', iniciales(p.name));
+    av.style.background = color(p.name);
+    if (p.arq) av.append(el('span', 'glove', '🧤'));
+    const who = el('div', 'who');
+    const sub = el('small');
+    if (p.uid === uid) { li.classList.add('mio'); sub.append(el('span', 'tag you', 'Tú')); }
+    if (p.guestOf) sub.append(el('span', 'tag inv', 'Invitado de ' + p.guestOf));
+    if (p.arq) sub.append(el('span', '', 'Arquero'));
+    sub.append(el('span', '', baja ? 'se bajó ' + hora(p.out) : hora(p.ts)));
+    who.append(el('b', '', p.name), sub);
+    li.append(av, who);
+    if (!baja && (p.uid === uid || isAdmin)) {
+      const b = el('button', 'mini', p.uid === uid ? 'Bajarme' : 'Sacar');
+      b.onclick = () => confirm(p.uid === uid ? `¿Seguro que te bajas${p.guestOf ? ' (' + p.name + ')' : ''}? Tu cupo pasa al siguiente.` : `¿Sacar a ${p.name} de la lista?`) &&
+        update(ref(db, `convos/${id}/players/${p.id}`), { out: serverTimestamp() })
+          .then(() => toast(p.uid === uid ? 'Listo, te bajaste 👋' : `${p.name} fuera de la lista`))
+          .catch(err => toast(err.message));
+      li.append(b);
+    }
+    return li;
+  }
+}
+
+const iniciales = s => s.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const color = s => { let h = 0; for (const c of s) h = (h * 31 + c.codePointAt(0)) % 360; return `hsl(${h} 55% 42%)`; };
+const hora = t => t ? new Date(t).toLocaleString('es', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : 'ahora';
+function cuenta(when) {
+  const d = new Date(when); if (isNaN(d)) return '';
+  const dia = x => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const n = Math.round((dia(d) - dia(new Date())) / 864e5);
+  return n < 0 ? 'Ya se jugó' : n === 0 ? '🔥 ¡Hoy!' : n === 1 ? '⏰ Mañana' : `⏳ En ${n} días`;
+}
+
+function festejo(from) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = from.getBoundingClientRect();
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('span');
+    s.className = 'burst';
+    s.textContent = ['⚽', '🎉', '✨', '🥅'][i % 4];
+    s.style.left = r.left + r.width / 2 + 'px'; s.style.top = r.top + 'px';
+    s.style.setProperty('--dx', (Math.random() - .5) * 260 + 'px');
+    s.style.setProperty('--dy', -60 - Math.random() * 180 + 'px');
+    s.style.setProperty('--r', (Math.random() - .5) * 720 + 'deg');
+    document.body.append(s);
+    setTimeout(() => s.remove(), 1000);
+  }
+}
+
+async function copiar(texto, ok) {
+  try { await navigator.clipboard.writeText(texto); toast(ok); }
+  catch { prompt('Copia esto:', texto); }
+}
+</script>
+</body>
+</html>

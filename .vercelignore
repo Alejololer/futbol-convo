@@ -1,0 +1,6 @@
+.playwright-mcp
+lista.test.mjs
+database.rules.json
+firebase.json
+.firebaserc
+README.md
