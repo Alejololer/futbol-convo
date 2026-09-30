@@ -3,14 +3,16 @@
     "keys": {
       "$id": {
         ".read": false,
-        ".write": "auth != null && !data.exists()",
+        ".write": "auth != null && (!data.exists() || (!newData.exists() && root.child('convos/' + $id + '/createdAt').val() < now - 1209600000))",
         ".validate": "newData.isString() && newData.val().length >= 20"
       }
     },
     "convos": {
+      ".indexOn": ["createdAt"],
+      ".read": "query.orderByChild == 'createdAt' && query.endAt != null && query.endAt <= now - 1209600000 && query.limitToFirst <= 20",
       "$id": {
         ".read": true,
-        ".write": "auth != null && !data.exists()",
+        ".write": "auth != null && (!data.exists() || (!newData.exists() && data.child('createdAt').val() < now - 1209600000))",
         ".validate": "newData.hasChildren(['title', 'when', 'cupo', 'createdAt'])",
         "title": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
@@ -61,6 +63,7 @@
     },
     "admins": {
       "$id": {
+        ".write": "auth != null && !newData.exists() && root.child('convos/' + $id + '/createdAt').val() < now - 1209600000",
         "$uid": {
           ".read": false,
           ".write": "auth != null && auth.uid == $uid",

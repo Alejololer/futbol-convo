@@ -290,7 +290,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import { getDatabase, ref, push, set, update, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
+import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, orderByChild, endAt, limitToFirst, get } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
 import { ordenar, yaEsta, fechaLarga, textoWhatsApp } from './lista.js';
 
 // Config público por diseño: la seguridad está en database.rules.json.
@@ -317,6 +317,12 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 await auth.authStateReady();
 const uid = (auth.currentUser || (await signInAnonymously(auth)).user).uid; // cuenta anónima e invisible: 1 por dispositivo
+
+// Limpieza: borra convocatorias de más de 14 días (las reglas solo dejan listar/borrar esas).
+// Margen de 1h por si el reloj del celular va adelantado. ponytail: corre en cada visita, sin cron ni servidor.
+get(query(ref(db, 'convos'), orderByChild('createdAt'), endAt(Date.now() - 14 * 864e5 - 36e5), limitToFirst(20)))
+  .then(s => { const u = {}; s.forEach(c => { for (const n of ['convos', 'keys', 'admins']) u[`${n}/${c.key}`] = null; }); return Object.keys(u).length && update(ref(db), u); })
+  .catch(() => {});
 
 const q = new URLSearchParams(location.search);
 const id = q.get('c');
