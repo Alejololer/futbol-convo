@@ -9,7 +9,7 @@
     },
     "convos": {
       ".indexOn": ["createdAt"],
-      ".read": "query.orderByChild == 'createdAt' && query.endAt != null && query.endAt <= now - 1209600000 && query.limitToFirst <= 20",
+      ".read": "query.orderByChild == 'createdAt' && query.endAt != null && query.startAt == null && query.equalTo == null && query.endAt != null && query.limitToFirst <= 10",
       "$id": {
         ".read": true,
         ".write": "auth != null && (!data.exists() || (!newData.exists() && data.child('createdAt').val() < now - 1209600000))",
