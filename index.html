@@ -291,12 +291,17 @@
       <ol id="suplentes" class="list card"></ol>
     </div>
 
+    <div id="arqBox" hidden>
+      <div class="sec"><h2>🧤 Fila de arqueros</h2><span class="count" id="arqCount"></span></div>
+      <ol id="arqueros" class="list card"></ol>
+    </div>
+
     <details id="bajBox" class="bajas" hidden>
       <summary id="bajSum"></summary>
       <ol id="bajas" class="list card"></ol>
     </details>
 
-    <p class="note">Los del grupo tienen prioridad; los invitados van después aunque se apunten antes. Si alguien se baja, el primer suplente sube solo.</p>
+    <p class="note">Los del grupo tienen prioridad; los invitados van después aunque se apunten antes. Los 2 primeros puestos son solo para arqueros; los demás arqueros esperan en su fila. Si alguien se baja, el primer suplente sube solo.</p>
   </div>
 </section>
 
@@ -306,7 +311,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
 import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, orderByChild, endAt, limitToFirst, get } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
-import { ordenar, yaEsta, fechaLarga, textoWhatsApp } from './lista.js';
+import { ordenar, yaEsta, fechaLarga, textoWhatsApp, ARQ } from './lista.js';
 
 // Config público por diseño: la seguridad está en database.rules.json.
 const firebaseConfig = {
@@ -496,12 +501,12 @@ function ver() {
     $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(textoWhatsApp(convo, r, shareUrl));
 
     // Mi estado
-    const yo = [...r.titulares.map((p, i) => ({ p, sup: false, n: i + 1 })), ...r.suplentes.map((p, i) => ({ p, sup: true, n: i + 1 }))]
+    const yo = [...r.titulares.map((p, i) => ({ p, sup: false, n: i + 1 })), ...r.suplentes.map((p, i) => ({ p, sup: true, n: i + 1 })), ...r.arqueros.map((p, i) => ({ p, sup: true, n: i + 1, fila: true }))]
       .find(x => x.p.uid === uid && !x.p.guestOf);
     const st = $('status');
     st.hidden = false;
     if (yo && !yo.sup) { st.className = 'status in'; st.innerHTML = `<span class="ico">✅</span><div>Estás dentro — titular #${yo.n}<small>Si no puedes ir, bájate desde la lista para que suba otro.</small></div>`; }
-    else if (yo) { st.className = 'status wait'; st.innerHTML = `<span class="ico">⏳</span><div>Estás en espera — suplente #${yo.n}<small>Si alguien se baja, subes solo.</small></div>`; }
+    else if (yo) { st.className = 'status wait'; st.innerHTML = `<span class="ico">⏳</span><div>Estás en espera — ${yo.fila ? 'fila de arqueros' : 'suplente'} #${yo.n}<small>Si alguien se baja, subes solo.</small></div>`; }
     else if (lleno) { st.className = 'status fullmsg'; st.innerHTML = `<span class="ico">🟡</span><div>La lista está llena<small>Si te apuntas quedas como suplente.</small></div>`; }
     else st.hidden = true;
     const soyYo = !!yo;
@@ -514,8 +519,12 @@ function ver() {
     }
     $('joinBtn').textContent = lleno ? 'Apuntarme como suplente' : 'Apuntarme';
 
-    const vacios = Array.from({ length: Math.max(0, convo.cupo - r.titulares.length) }, () => null);
-    $('titulares').replaceChildren(...[...r.titulares, ...vacios].map((p, i) => fila(p, i + 1)));
+    const tArq = r.titulares.filter(p => p.arq), tCampo = r.titulares.filter(p => !p.arq);
+    const vacios = (n, arq) => Array.from({ length: Math.max(0, n) }, () => arq ? 'arq' : null);
+    $('titulares').replaceChildren(...[...tArq, ...vacios(ARQ - tArq.length, true), ...tCampo, ...vacios(convo.cupo - ARQ - tCampo.length)].map((p, i) => fila(p, i + 1)));
+    $('arqueros').replaceChildren(...r.arqueros.map((p, i) => fila(p, 'A' + (i + 1))));
+    $('arqCount').textContent = r.arqueros.length;
+    $('arqBox').hidden = !r.arqueros.length;
     $('suplentes').replaceChildren(...r.suplentes.map((p, i) => fila(p, 'S' + (i + 1))));
     $('bajas').replaceChildren(...r.bajas.map(p => fila(p, '', true)));
     $('titCount').textContent = `${r.titulares.length}/${convo.cupo}`;
@@ -530,10 +539,10 @@ function ver() {
     const el = (tag, cls, t) => Object.assign(document.createElement(tag), { className: cls || '', textContent: t ?? '' });
     const li = el('li');
     li.append(el('span', 'pos', n));
-    if (!p) {
+    if (!p || p === 'arq') {
       li.className = 'vacio';
-      li.append(el('span', 'av', '+'), Object.assign(el('div', 'who'), { innerHTML: '<b>Cupo libre</b>' }));
-      li.onclick = () => { $('joinWrap').open = true; $('jName').focus(); };
+      li.append(el('span', 'av', p ? '🧤' : '+'), Object.assign(el('div', 'who'), { innerHTML: p ? '<b>Cupo arquero</b>' : '<b>Cupo libre</b>' }));
+      li.onclick = () => { $('joinWrap').open = true; $('fJoin').arq.checked = !!p; $('jName').focus(); };
       return li;
     }
     if (seen && !seen.has(p.id)) li.classList.add('nuevo');

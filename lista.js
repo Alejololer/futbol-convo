@@ -3,6 +3,8 @@
 export const normalizar = s =>
   (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim().replace(/\s+/g, ' ');
 
+export const ARQ = 2; // cupos exclusivos para arqueros
+
 // players: objeto { pushId: { name, arq, guestOf, uid, ts, out? } } tal cual viene de Firebase
 export function ordenar(players, cupo) {
   const todos = Object.entries(players || {}).map(([id, p]) => ({ id, ...p }));
@@ -10,9 +12,11 @@ export function ordenar(players, cupo) {
   const activos = todos
     .filter(p => !p.out)
     .sort((a, b) => !!a.guestOf - !!b.guestOf || ts(a) - ts(b)); // grupo primero, luego invitados
+  const arq = activos.filter(p => p.arq), campo = activos.filter(p => !p.arq);
   return {
-    titulares: activos.slice(0, cupo),
-    suplentes: activos.slice(cupo),
+    titulares: [...arq.slice(0, ARQ), ...campo.slice(0, cupo - ARQ)], // puestos 1..ARQ solo arqueros
+    suplentes: campo.slice(cupo - ARQ),
+    arqueros: arq.slice(ARQ), // fila de arqueros extra
     bajas: todos.filter(p => p.out).sort((a, b) => a.out - b.out),
   };
 }
@@ -57,13 +61,18 @@ export function cambios(players, cupo, desde) {
   return { lineas: ev.sort((x, y) => x[0] - y[0]).map(e => e[1]), hasta, titulares: ahora.titulares.length };
 }
 
-export function textoWhatsApp(convo, { titulares, suplentes }, url) {
+export function textoWhatsApp(convo, { titulares, suplentes, arqueros = [] }, url) {
+  const ta = titulares.filter(p => p.arq), tc = titulares.filter(p => !p.arq);
+  const vac = (n, ini, sufijo) => Array.from({ length: Math.max(0, n) }, (_, i) => `${ini + i + 1}.${sufijo}`);
   return [
     `${convo.title} para el ${fechaLarga(convo.when)}${convo.place ? ' ' + convo.place : ''}`,
     '',
-    ...titulares.map((p, i) => `${i + 1}. ${etiqueta(p)}`),
-    ...Array.from({ length: convo.cupo - titulares.length }, (_, i) => `${titulares.length + i + 1}.`),
+    ...ta.map((p, i) => `${i + 1}. ${etiqueta(p)}`),
+    ...vac(ARQ - ta.length, ta.length, ' 🧤'),
+    ...tc.map((p, i) => `${ARQ + i + 1}. ${etiqueta(p)}`),
+    ...vac(convo.cupo - ARQ - tc.length, ARQ + tc.length, ''),
     ...suplentes.map((p, i) => `Suplente ${i + 1}. ${etiqueta(p)}`),
+    ...arqueros.map((p, i) => `Arquero en fila ${i + 1}. ${etiqueta(p)}`),
     '',
     `👉 Apúntate / bájate aquí: ${url}`,
   ].join('\n');

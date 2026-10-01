@@ -5,7 +5,7 @@ Una sola lista por link, en vivo. Nadie copia y pega; nadie saca a nadie sin que
 - **Crear:** abre la página sin parámetros, llena fecha, cancha y cupos. Te lleva a tu **link de admin** (guárdalo).
 - **Compartir:** "Enviar al WhatsApp" manda al grupo la lista con el link normal.
 - **Apuntarse:** cada uno abre el link, pone su nombre (marca arquero si aplica) y listo. Para un invitado, se pone "de quién es".
-- **Orden automático:** primero los del grupo por orden de llegada (hora del servidor) y después los invitados. Los que pasen del cupo quedan como suplentes.
+- **Orden automático:** primero los del grupo por orden de llegada (hora del servidor) y después los invitados. Los que pasen del cupo quedan como suplentes. Los 2 primeros puestos son solo para arqueros (quedan libres si no hay); los demás arqueros esperan en una fila aparte y suben si un arquero titular se baja.
 - **Bajarse:** botón "Bajarme" (solo desde el mismo celular con que te apuntaste). Tu nombre queda en "Bajas" con la hora y el primer suplente sube solo.
 - **Admin:** con el link de admin puede sacar a cualquiera (por ejemplo, si alguien cambió de celular).
 - **Sin cuentas:** usa una sesión anónima e invisible de Firebase por dispositivo.
