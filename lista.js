@@ -33,6 +33,30 @@ export function fechaLarga(when) {
 
 const etiqueta = p => p.name + (p.arq ? ' (arq)' : '') + (p.guestOf ? ` (inv. de ${p.guestOf})` : '');
 
+// Mayor ts/out de la lista: marca de hasta dónde ya se avisó.
+export const marca = players => Math.max(0, ...Object.values(players || {}).flatMap(p => [p.ts || 0, p.out || 0]));
+
+// Qué pasó en la lista desde la marca `desde` (el mayor ts/out ya avisado). Devuelve las líneas del aviso y la nueva marca.
+// Un jugador nuevo = ts > desde; una baja = out > desde. Se compara la lista de antes con la de ahora para detectar quién sube o baja de titular.
+export function cambios(players, cupo, desde) {
+  const todos = Object.entries(players || {}).map(([id, p]) => ({ id, ...p }));
+  const hasta = Math.max(desde || 0, marca(players));
+  const antes = {};
+  for (const p of todos) if ((p.ts || 0) <= desde) antes[p.id] = p.out > desde ? { ...p, out: undefined } : p;
+  const a = ordenar(antes, cupo), ahora = ordenar(players, cupo);
+  const tit = new Set(ahora.titulares.map(p => p.id)), titAntes = new Set(a.titulares.map(p => p.id));
+  const ev = [];
+  for (const p of todos) {
+    if (p.ts > desde && !p.out) ev.push([p.ts, `${p.guestOf ? '🎟️' : '➕'} ${etiqueta(p)}${tit.has(p.id) ? '' : ' (suplente)'}`]);
+    else if (p.out > desde && p.ts <= desde) ev.push([p.out, `➖ ${p.name} se bajó`]);
+    if (p.ts <= desde && !p.out) {
+      if (tit.has(p.id) && !titAntes.has(p.id)) ev.push([hasta, `⬆️ ${p.name} sube a titular`]);
+      else if (!tit.has(p.id) && titAntes.has(p.id)) ev.push([hasta, `⬇️ ${p.name} pasa a suplente`]);
+    }
+  }
+  return { lineas: ev.sort((x, y) => x[0] - y[0]).map(e => e[1]), hasta, titulares: ahora.titulares.length };
+}
+
 export function textoWhatsApp(convo, { titulares, suplentes }, url) {
   return [
     `${convo.title} para el ${fechaLarga(convo.when)}${convo.place ? ' ' + convo.place : ''}`,

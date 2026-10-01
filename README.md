@@ -10,6 +10,15 @@ Una sola lista por link, en vivo. Nadie copia y pega; nadie saca a nadie sin que
 - **Admin:** con el link de admin puede sacar a cualquiera (por ejemplo, si alguien cambió de celular).
 - **Sin cuentas:** usa una sesión anónima e invisible de Firebase por dispositivo.
 
+## Avisos (Web Push)
+
+Cada alta, baja, invitado o suplente que sube le llega como notificación a quien tocó "🔔 Activar avisos". Reemplaza el copiar/pegar en el grupo.
+
+- **iPhone:** solo funciona con la página instalada ("Compartir → Agregar a pantalla de inicio", iOS 16.4+). La tarjeta de avisos guía ese paso. La app instalada no comparte sesión con Safari: desde ahí hay que apuntarse de nuevo.
+- **Nueva convocatoria:** al crearla desde el mismo celular de admin de la anterior, queda marcado "📣 Avisar a los suscritos de la anterior": heredan los avisos y reciben el link nuevo.
+- **Servidor:** `api/avisos.js` (función de Vercel + `firebase-admin` + `web-push`) arma el aviso leyendo la base. `subs/` y `notif/` no tienen reglas: solo el servidor las toca.
+- **Variables de entorno en Vercel:** `VAPID_PUBLIC`, `VAPID_PRIVATE` (`npx web-push generate-vapid-keys`; la pública también va en `index.html`) y `FIREBASE_SA` (JSON de la cuenta de servicio: Firebase → Configuración → Cuentas de servicio → Generar clave).
+
 ## En producción
 
 - App: https://futbol-convo.vercel.app (proyecto Vercel `futbol-convo`)
@@ -38,6 +47,7 @@ node lista.test.mjs
 ## Archivos
 
 - `index.html`: toda la app.
-- `lista.js`: orden, suplentes y texto para WhatsApp (funciones puras).
+- `lista.js`: orden, suplentes, texto para WhatsApp y diff de cambios para los avisos (funciones puras).
+- `api/avisos.js`, `sw.js`, `manifest.webmanifest`: avisos push.
 - `lista.test.mjs`: verificación de esa lógica.
 - `database.rules.json`: seguridad. Cada uno solo puede bajarse a sí mismo, nadie puede adelantarse falseando la hora y nadie puede borrar filas.

@@ -1,6 +1,6 @@
 // node lista.test.mjs
 import assert from 'node:assert/strict';
-import { ordenar, yaEsta, fechaLarga, textoWhatsApp } from './lista.js';
+import { ordenar, yaEsta, fechaLarga, textoWhatsApp, cambios } from './lista.js';
 
 const players = {
   a: { name: 'Alejo A.', arq: true, ts: 1 },
@@ -26,5 +26,19 @@ const txt = textoWhatsApp({ title: 'Convocatoria', when: '2026-09-28T20:00', pla
 assert.match(txt, /^Convocatoria para el LUNES 28 de septiembre a las 8:00 PM Cancha 4/);
 assert.match(txt, /\n1\. Alejo A\. \(arq\)\n2\. Andrés Páez\n3\. Macha\n4\.\nSuplente 1\. Richard\n/);
 assert.match(txt, /Suplente 3\. Marquinhos \(inv\. de Marcos\)/);
+
+// cambios: lo que pasó desde la última marca
+const ps = { a: { name: 'Ana', ts: 1 }, b: { name: 'Beto', ts: 2 }, c: { name: 'Caro', ts: 3 } };
+let c = cambios(ps, 2, 3);
+assert.deepEqual(c.lineas, [], 'sin cambios → sin aviso');
+c = cambios({ ...ps, d: { name: 'Dani', ts: 4 }, e: { name: 'Pedro', guestOf: 'Marcos', ts: 5 } }, 2, 3);
+assert.deepEqual(c.lineas, ['➕ Dani (suplente)', '🎟️ Pedro (inv. de Marcos) (suplente)']);
+c = cambios({ ...ps, a: { name: 'Ana', ts: 1, out: 6 } }, 2, 3);
+assert.deepEqual(c.lineas, ['➖ Ana se bajó', '⬆️ Caro sube a titular']);
+assert.equal(c.hasta, 6);
+c = cambios({ ...ps, g: { name: 'Gus', ts: 9 } }, 4, 3);
+assert.deepEqual(c.lineas, ['➕ Gus']);
+c = cambios({ ...ps, x: { name: 'Xavi', ts: 7 } }, 4, 3);
+assert.deepEqual(c.lineas, ['➕ Xavi'], 'nuevo en lista con cupo libre → titular');
 
 console.log('ok');
