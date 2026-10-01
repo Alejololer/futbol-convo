@@ -129,7 +129,6 @@
   .avisos .hint { color:var(--accent); font-weight:700; font-size:.9rem; animation:bob 1.2s ease-in-out infinite; }
   @keyframes bob { 50% { transform:translateY(5px); } }
   .avisos .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .nextBanner { display:block; margin-top:14px; padding:14px 16px; border-radius:14px; background:#fde047; color:#422006; font-weight:700; text-decoration:none; text-align:center; }
 
   /* ---------- Listas ---------- */
   .sec { display:flex; align-items:center; justify-content:space-between; margin:26px 4px 10px; color:#fff; }
@@ -171,7 +170,7 @@
   /* celular: todo en una columna, compartir al final y fijo abajo */
   #convo { display:flex; flex-direction:column; }
   .aside { display:contents; }
-  .nextBanner { order:0; } .hero { order:1; } .joinCard, .avisos { order:2; } #adminBox { order:3; } .main { order:4; } .dock { order:5; }
+  .hero { order:1; } .joinCard, .avisos { order:2; } #adminBox { order:3; } .main { order:4; } .dock { order:5; }
 
   /* pantallas anchas: dos columnas, la izquierda fija */
   @media (min-width: 960px) {
@@ -220,7 +219,6 @@
       <div><label class="f" for="cCupo">Cupos</label>
         <input id="cCupo" name="cupo" type="number" min="2" max="60" required value="16" inputmode="numeric"></div>
     </div>
-    <label class="toggle" id="cAvisarWrap" hidden><input id="cAvisar" type="checkbox" checked> 📣 Avisar a los suscritos de la anterior</label>
     <button class="full">Crear y obtener link →</button>
   </form>
   <p class="note">Te llevará a tu <b>link de admin</b>. Guárdalo: con él puedes sacar gente de la lista.</p>
@@ -229,7 +227,6 @@
 <!-- ======== Convocatoria ======== -->
 <section id="convo" class="layout" hidden>
   <div class="aside">
-    <a id="nextBanner" class="nextBanner" hidden>📣 Hay una convocatoria nueva — tócala para abrirla →</a>
     <header class="hero">
       <span class="pill">⚽ Convocatoria</span>
       <h1 id="title"></h1>
@@ -358,8 +355,6 @@ function crear() {
   const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); d.setHours(20, 0, 0, 0);
   $('cWhen').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
   for (const k of ['title', 'place', 'cupo']) if (store.get('ultima.' + k)) $('fCrear')[k].value = store.get('ultima.' + k);
-  const prev = store.get('ultimaAdmin'), prevKey = store.get('admin.' + prev);
-  $('cAvisarWrap').hidden = !prevKey; // solo el admin de la anterior puede pasarle sus suscritos a la nueva
 
   $('fCrear').onsubmit = async e => {
     e.preventDefault();
@@ -372,7 +367,6 @@ function crear() {
         [`convos/${nuevo}`]: { title: f.title.trim(), when: f.when, place: f.place.trim(), cupo: +f.cupo, createdAt: serverTimestamp() },
       });
       for (const k of ['title', 'place', 'cupo']) store.set('ultima.' + k, f[k]);
-      if (prevKey && $('cAvisar').checked) await api({ accion: 'nueva', c: nuevo, prev, prevKey }).catch(() => {});
       location.search = `?c=${nuevo}&admin=${key}`;
     } catch (err) { toast('No se pudo crear: ' + err.message); e.target.querySelector("button").disabled = false; }
   };
@@ -383,9 +377,8 @@ function ver() {
   let isAdmin = false, convo = null, seen = null, yoAntes;
 
   if (adminKey) set(ref(db, `admins/${id}/${uid}`), adminKey)
-    .then(() => { isAdmin = true; $('adminBox').hidden = false; store.set('admin.' + id, adminKey); store.set('ultimaAdmin', id); if (convo) render(); })
+    .then(() => { isAdmin = true; $('adminBox').hidden = false; if (convo) render(); })
     .catch(() => toast('Link de admin inválido'));
-  if (q.get('h') && 'Notification' in window && Notification.permission === 'granted') store.set('avisos.' + id, '1'); // convocatoria que heredó mis avisos
 
   const avisar = () => api({ accion: 'notify', c: id }).catch(() => {});
   navigator.serviceWorker?.register('/sw.js').catch(() => {});
@@ -480,8 +473,6 @@ function ver() {
     $('place').textContent = '📍 ' + (convo.place || 'Por definir');
     const cd = cuenta(convo.when);
     $('countdown').hidden = !cd; $('countdown').textContent = cd;
-    $('nextBanner').hidden = !convo.next;
-    if (convo.next) $('nextBanner').href = `?c=${convo.next}` + (store.get('avisos.' + id) ? '&h=1' : '');
     $('cupos').innerHTML = `${r.titulares.length}<small> / ${convo.cupo}</small>`;
     $('cuposLbl').textContent = lleno ? (r.suplentes.length ? `¡Completo! +${r.suplentes.length} en espera` : '¡Completo!') : `Faltan ${convo.cupo - r.titulares.length}`;
     $('bar').classList.toggle('full', lleno);

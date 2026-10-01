@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import webpush from 'web-push';
-import { cambios, marca, fechaLarga } from '../lista.js';
+import { cambios, marca } from '../lista.js';
 
 const MAX_SUBS = 300;
 // Solo servicios push reales: evita que alguien registre una URL cualquiera y use el servidor para pegarle.
@@ -64,20 +64,6 @@ const acciones = {
       body: r.lineas.join('\n'),
       url: `/?c=${c}`,
     });
-  },
-
-  // Convocatoria nueva creada por el admin de la anterior: copiamos los suscritos (la anterior sigue avisando) y les avisamos.
-  async nueva({ c, prev, prevKey }) {
-    if (!ID.test(prev) || prev === c) return 400;
-    const [key, convo, next, subs] = await Promise.all([val(`keys/${prev}`), val(`convos/${c}`), val(`convos/${prev}/next`), val(`subs/${prev}`)]);
-    if (!key || key !== prevKey || !convo || next) return 403;
-    const players = await val(`convos/${c}/players`);
-    await db.ref().update({
-      [`convos/${prev}/next`]: c,
-      [`subs/${c}`]: subs,
-      [`notif/${c}`]: marca(players),
-    });
-    await enviar(c, { title: '📣 Nueva convocatoria', body: `${convo.title} · ${fechaLarga(convo.when)}${convo.place ? ' · ' + convo.place : ''}`, url: `/?c=${c}&h=1` });
   },
 };
 

@@ -15,7 +15,7 @@ Una sola lista por link, en vivo. Nadie copia y pega; nadie saca a nadie sin que
 Cada alta, baja, invitado o suplente que sube le llega como notificación a quien tocó "🔔 Activar avisos". Reemplaza el copiar/pegar en el grupo.
 
 - **iPhone:** solo funciona con la página instalada ("Compartir → Agregar a pantalla de inicio", iOS 16.4+). La tarjeta de avisos guía ese paso. La app instalada no comparte sesión con Safari: desde ahí hay que apuntarse de nuevo.
-- **Nueva convocatoria:** al crearla desde el mismo celular de admin de la anterior, queda marcado "📣 Avisar a los suscritos de la anterior": heredan los avisos y reciben el link nuevo.
+- **Por sala:** los avisos son de cada convocatoria; quien quiera recibirlos en la siguiente la activa de nuevo (un toque).
 - **Servidor:** `api/avisos.js` (función de Vercel + `firebase-admin` + `web-push`) arma el aviso leyendo la base. `subs/` y `notif/` no tienen reglas: solo el servidor las toca.
 - **Variables de entorno en Vercel:** `VAPID_PUBLIC`, `VAPID_PRIVATE` (`npx web-push generate-vapid-keys`; la pública también va en `index.html`) y `FIREBASE_SA` (JSON de la cuenta de servicio: Firebase → Configuración → Cuentas de servicio → Generar clave).
 
