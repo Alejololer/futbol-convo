@@ -346,6 +346,17 @@ get(query(ref(db, 'convos'), orderByChild('createdAt'), endAt(Date.now() - 14 * 
 const q = new URLSearchParams(location.search);
 const id = q.get('c');
 const adminKey = q.get('admin');
+const instalada = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+
+// App instalada (iPhone): al abrirla desde el ícono va a la última sala vista en este dispositivo (guardada con su ?admin si lo tenía).
+// Los avisos traen &n=1 y respetan su sala. Solo se redirige una vez por apertura (sessionStorage se borra al cerrar la app).
+try {
+  const ultima = store.get('ultimaSala');
+  if (instalada && !sessionStorage.lanzada) {
+    sessionStorage.lanzada = '1';
+    if (ultima && !q.get('n') && new URLSearchParams(ultima).get('c') !== id) { location.replace(ultima); await new Promise(() => {}); }
+  }
+} catch {}
 
 if (!id) crear(); else ver();
 
@@ -387,7 +398,6 @@ function ver() {
   async function pintarAvisos() {
     const box = $('avisos'), ua = navigator.userAgent;
     const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const instalada = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
     const v = ua.match(/OS (\d+)_(\d+)/), viejo = ios && v && (+v[1] < 16 || (+v[1] === 16 && +v[2] < 4));
     const soporta = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     const head = '<b>🔔 Avisos en tu celular</b>';
@@ -459,7 +469,13 @@ function ver() {
 
   onValue(ref(db, `convos/${id}`), snap => {
     convo = snap.val();
-    if (!convo) { $('loading').querySelector('.spin').textContent = '🤷'; return msg('Esta convocatoria no existe. Revisa el link.'); }
+    if (!convo) {
+      $('loading').querySelector('.spin').textContent = '🤷'; msg('Esta convocatoria no existe. Revisa el link.');
+      $('msg').append(' ', Object.assign(document.createElement('a'), { href: location.pathname, textContent: 'Crear una nueva', style: 'color:inherit;font-weight:700' }));
+      if (new URLSearchParams(store.get('ultimaSala')).get('c') === id) store.set('ultimaSala', '');
+      return;
+    }
+    if (adminKey || new URLSearchParams(store.get('ultimaSala')).get('c') !== id) store.set('ultimaSala', `?c=${id}` + (adminKey ? `&admin=${adminKey}` : ''));
     render();
   }, err => msg('Error: ' + err.message));
 

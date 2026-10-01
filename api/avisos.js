@@ -62,7 +62,7 @@ const acciones = {
     await enviar(c, {
       title: `${convo.title} · ${r.titulares}/${convo.cupo}${falta > 0 ? ` · faltan ${falta}` : ' · ¡completo!'}`,
       body: r.lineas.join('\n'),
-      url: `/?c=${c}`,
+      url: `/?c=${c}&n=1`,
     });
   },
 };
