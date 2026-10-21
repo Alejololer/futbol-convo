@@ -409,16 +409,21 @@ function ver() {
     box.hidden = false;
     if (ios && !instalada) {
       $('joinWrap').closest('.joinCard').before(box); // en iPhone la app instalada tiene otra sesión: primero instalar, después apuntarse
+      // En iOS ningún navegador tiene push en pestaña (todos son WebKit); Chrome/Firefox/Edge también instalan desde Compartir.
+      const [nav, paso1, hint] = /CriOS/.test(ua) ? ['Chrome', 'Toca <b>Compartir</b> ⬆️ junto a la dirección, arriba.', '👆 Compartir está arriba, junto a la dirección']
+        : /FxiOS/.test(ua) ? ['Firefox', 'Toca el menú <b>☰</b> y luego <b>Compartir</b>.', '']
+        : /EdgiOS/.test(ua) ? ['Edge', 'Toca <b>⋯</b> y luego <b>Compartir</b>.', '']
+        : ['Safari', 'Toca <b>Compartir</b> ⬆️ en la barra de Safari (si no lo ves, está en <b>⋯</b>).', '👇 Compartir está en la barra de abajo'];
       box.innerHTML = viejo
         ? `${head}<p>Para recibir avisos en iPhone necesitas iOS 16.4 o más nuevo. Actualiza en Ajustes → General → Actualización de software.</p>`
         : `${head}<p>Te avisamos cuando alguien se apunta, se baja, llega un invitado o sube un suplente.</p>
            <p><b>Solo en iPhone:</b> hay que instalar la página una sola vez, <b>antes de apuntarte</b>:</p>
-           <ol><li>Toca <b>Compartir</b> ⬆️ en la barra de Safari (si no lo ves, está en <b>⋯</b>).</li>
+           <ol><li>${paso1}</li>
            <li>Elige <b>Agregar a pantalla de inicio</b> y confirma.</li>
-           <li>Abre <b>Convocatoria ⚽</b> desde tu pantalla de inicio y toca <b>Activar avisos</b>. Apúntate desde esa app, no desde Safari.</li></ol>
-           <p>La app instalada no comparte sesión con Safari: si ya te apuntaste aquí, para bajarte vuelve a Safari.</p>
-           <p>¿Abriste el link desde WhatsApp y no ves la opción? Toca 🧭 <b>Abrir en Safari</b> primero.</p>
-           <div class="hint">👇 Compartir está en la barra de abajo</div>`;
+           <li>Abre <b>Convocatoria ⚽</b> desde tu pantalla de inicio y toca <b>Activar avisos</b>. Apúntate desde esa app, no desde ${nav}.</li></ol>
+           <p>La app instalada no comparte sesión con ${nav}: si ya te apuntaste aquí, para bajarte vuelve a ${nav}.</p>
+           ${nav === 'Safari' ? '<p>¿Abriste el link desde WhatsApp y no ves la opción? Toca 🧭 <b>Abrir en Safari</b> primero.</p>' : ''}
+           ${hint && `<div class="hint">${hint}</div>`}`;
       return;
     }
     if (!soporta) { box.innerHTML = `${head}<p>${viejo ? 'Necesitas iOS 16.4 o más nuevo para recibir avisos.' : 'Este navegador no permite avisos. Abre el link en Chrome o Safari.'}</p>`; return; }
