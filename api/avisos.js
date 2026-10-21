@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import webpush from 'web-push';
-import { cambios, marca } from '../lista.js';
+import { cambios, marca, semana } from '../lista.js';
 
 const MAX_SUBS = 300;
 // Solo servicios push reales: evita que alguien registre una URL cualquiera y use el servidor para pegarle.
@@ -49,20 +49,33 @@ const acciones = {
     if (typeof endpoint === 'string') await db.ref(`subs/${c}/${hash(endpoint)}`).remove();
   },
 
-  async notify({ c }) {
+  // Grupo semanal: crea el partido del lunes que toca (con su hora de apertura). Idempotente: lo llama cada visita.
+  async semana({ c }) {
+    const [hora, tz] = await Promise.all([val(`convos/${c}/hora`), val(`convos/${c}/tz`)]);
+    if (!hora) return 404;
+    const s = semana(Date.now(), tz, hora);
+    await db.ref(`convos/${c}/partidos/${s.pid}`).transaction(cur => cur === null ? { when: s.when, abre: s.abre } : undefined);
+  },
+
+  // p = partido del grupo; sin p = partido único (la convocatoria misma).
+  async notify({ c, p }) {
+    if (p != null && !ID.test(p)) return 400;
     const convo = await val(`convos/${c}`);
-    if (!convo) return 404;
+    const pa = p ? convo?.partidos?.[p] : convo;
+    if (!pa) return 404;
+    const cupo = pa.cupo || convo.cupo;
     let desde;
-    const hasta = marca(convo.players);
-    const res = await db.ref(`notif/${c}`).transaction(cur => { desde = cur; return cur == null || cur < hasta ? hasta : undefined; });
-    if (!res.committed || desde == null) return; // nada nuevo, otro aviso ya lo cubrió, o primera vez sin suscritos
-    const r = cambios(convo.players, convo.cupo, desde);
+    const hasta = marca(pa.players);
+    const res = await db.ref(`notif/${p ? `${c}~${p}` : c}`).transaction(cur => { desde = cur; return cur == null || cur < hasta ? hasta : undefined; });
+    if (!res.committed || (desde == null && !p)) return; // nada nuevo u otro aviso ya lo cubrió: cada cambio se avisa una sola vez
+    const r = cambios(pa.players, cupo, desde || 0, p && { tz: convo.tz, when: pa.when });
     if (!r.lineas.length) return;
-    const falta = convo.cupo - r.titulares;
+    const falta = cupo - r.titulares;
+    const fecha = p ? ` · ${pa.extra ? '⭐ ' : ''}${new Date(pa.when + 'Z').toLocaleDateString('es', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })}` : '';
     await enviar(c, {
-      title: `${convo.title} · ${r.titulares}/${convo.cupo}${falta > 0 ? ` · faltan ${falta}` : ' · ¡completo!'}`,
+      title: `${convo.title}${fecha} · ${r.titulares}/${cupo}${falta > 0 ? ` · faltan ${falta}` : ' · ¡completo!'}`,
       body: r.lineas.join('\n'),
-      url: `/?c=${c}&n=1`,
+      url: `/?c=${c}${p ? `&p=${p}` : ''}&n=1`,
     });
   },
 };

@@ -3,17 +3,15 @@
     "keys": {
       "$id": {
         ".read": false,
-        ".write": "auth != null && (!data.exists() || (!newData.exists() && root.child('convos/' + $id + '/createdAt').val() < now - 1209600000))",
+        ".write": "auth != null && !data.exists()",
         ".validate": "newData.isString() && newData.val().length >= 20"
       }
     },
     "convos": {
-      ".indexOn": ["createdAt"],
-      ".read": "query.orderByChild == 'createdAt' && query.endAt != null && query.startAt == null && query.equalTo == null && query.endAt != null && query.limitToFirst <= 10",
       "$id": {
         ".read": true,
-        ".write": "auth != null && (!data.exists() || (!newData.exists() && data.child('createdAt').val() < now - 1209600000))",
-        ".validate": "newData.hasChildren(['title', 'when', 'cupo', 'createdAt'])",
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.hasChildren(['title', 'cupo', 'createdAt']) && (newData.hasChild('when') || newData.hasChildren(['hora', 'tz']))",
         "title": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
         },
@@ -51,9 +49,81 @@
             "out": {
               ".validate": "newData.val() == now || newData.val() == data.val()"
             },
+            "conf": {
+              ".validate": "newData.val() == true"
+            },
+            "sube": {
+              ".validate": "newData.val() == true && !data.exists() && newData.parent().child('out').val() == now"
+            },
             "$other": {
               ".validate": false
             }
+          }
+        },
+        "hora": {
+          ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+        },
+        "tz": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"
+        },
+        "partidos": {
+          "$pid": {
+            ".write": "auth != null && !data.exists() && newData.child('extra').val() == true && root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()",
+            ".validate": "newData.hasChildren(['when', 'abre'])",
+            "when": {
+              ".validate": "newData.isString() && newData.val().length <= 30"
+            },
+            "abre": {
+              ".validate": "newData.val() == now || newData.val() == data.val()"
+            },
+            "cupo": {
+              ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 60"
+            },
+            "extra": {
+              ".validate": "newData.val() == true"
+            },
+            "players": {
+              "$p": {
+                ".write": "auth != null && ((!data.exists() && newData.child('uid').val() == auth.uid && now >= root.child('convos/' + $id + '/partidos/' + $pid + '/abre').val()) || (data.exists() && newData.exists() && (data.child('uid').val() == auth.uid || (root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()))))",
+                ".validate": "newData.hasChildren(['name', 'uid', 'ts']) && (!data.child('out').exists() || newData.child('out').val() == data.child('out').val())",
+                "name": {
+                  ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && (!data.exists() || newData.val() == data.val())"
+                },
+                "uid": {
+                  ".validate": "!data.exists() || newData.val() == data.val()"
+                },
+                "ts": {
+                  ".validate": "(!data.exists() && newData.val() == now) || newData.val() == data.val()"
+                },
+                "arq": {
+                  ".validate": "newData.isBoolean() && (!data.exists() || newData.val() == data.val())"
+                },
+                "guestOf": {
+                  ".validate": "newData.isString() && newData.val().length <= 40 && (!data.exists() || newData.val() == data.val())"
+                },
+                "out": {
+                  ".validate": "newData.val() == now || newData.val() == data.val()"
+                },
+                "conf": {
+                  ".validate": "newData.val() == true"
+                },
+                "sube": {
+                  ".validate": "newData.val() == true && !data.exists() && newData.parent().child('out').val() == now"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "pagos": {
+          "$k": {
+            ".write": "auth != null && root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()",
+            ".validate": "newData.val() == true"
           }
         },
         "$other": {
@@ -63,7 +133,6 @@
     },
     "admins": {
       "$id": {
-        ".write": "auth != null && !newData.exists() && root.child('convos/' + $id + '/createdAt').val() < now - 1209600000",
         "$uid": {
           ".read": false,
           ".write": "auth != null && auth.uid == $uid",

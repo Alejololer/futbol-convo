@@ -79,7 +79,7 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow:var(--shadow); }
   .stack > * + * { margin-top:14px; }
   label.f { display:block; margin:0 0 6px; font-size:.85rem; font-weight:600; color:var(--muted); }
-  input[type=text], input[type=number], input[type=datetime-local] {
+  input[type=text], input[type=number], input[type=datetime-local], input[type=time] {
     width:100%; padding:13px 14px; font:inherit; font-size:1rem; border:1.5px solid var(--line); border-radius:12px; background:var(--soft); color:var(--fg);
     transition:border-color .15s, box-shadow .15s; }
   input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
@@ -153,9 +153,12 @@
   li.vacio { cursor:pointer; }
   #suplentes { border-color:color-mix(in srgb, var(--amber) 45%, var(--line)); }
   #suplentes .pos { color:var(--amber); }
-  details.bajas summary { cursor:pointer; color:rgb(255 255 255 / .85); font-weight:600; margin:22px 4px 8px; }
-  details.bajas li .who b { text-decoration:line-through; color:var(--muted); }
-  details.bajas li .av { filter:grayscale(1); opacity:.5; }
+  .bajas li .who b { text-decoration:line-through; color:var(--muted); }
+  .bajas li .av { filter:grayscale(1); opacity:.5; }
+  #deuBox ol { border-color:color-mix(in srgb, var(--amber) 45%, var(--line)); }
+  button.chip { color:#fff; font-weight:600; font-size:.9rem; padding:6px 11px; border-radius:10px; background:rgb(255 255 255 / .13); }
+  button.chip.sel { background:#fff; color:var(--pitch2); }
+  .crearNota { margin:.4em 0 0; color:var(--muted); font-size:.85rem; }
   .note { color:rgb(255 255 255 / .82); font-size:.85rem; text-align:center; margin:22px 8px 8px; }
 
   li.nuevo { animation:pop .55s cubic-bezier(.2,.9,.3,1.3); }
@@ -211,15 +214,22 @@
   <form id="fCrear" class="card stack">
     <div><label class="f" for="cTitle">Título</label>
       <input id="cTitle" name="title" type="text" maxlength="80" required value="Convocatoria"></div>
-    <div><label class="f" for="cWhen">Fecha y hora</label>
-      <input id="cWhen" name="when" type="datetime-local" required></div>
+    <div class="opts">
+      <label class="toggle"><input name="modo" type="radio" value="semanal" checked> 🔁 Cada lunes</label>
+      <label class="toggle"><input name="modo" type="radio" value="unico"> 📅 Una sola vez</label>
+    </div>
+    <div id="cSemanal"><label class="f" for="cHora">Hora del partido (cada lunes)</label>
+      <input id="cHora" name="hora" type="time" required value="20:00">
+      <p class="crearNota">Un solo link para siempre. La lista se abre sola cada miércoles a la 1:00 PM. Quien se baja el lunes debe 3 🍺.</p></div>
+    <div id="cUnico" hidden><label class="f" for="cWhen">Fecha y hora</label>
+      <input id="cWhen" name="when" type="datetime-local" required disabled></div>
     <div class="grid2">
       <div><label class="f" for="cPlace">Lugar</label>
         <input id="cPlace" name="place" type="text" maxlength="80" value="Cancha 4"></div>
       <div><label class="f" for="cCupo">Cupos</label>
         <input id="cCupo" name="cupo" type="number" min="2" max="60" required value="16" inputmode="numeric"></div>
     </div>
-    <button class="full">Crear y obtener link →</button>
+    <button class="full">Empezar y obtener link →</button>
   </form>
   <p class="note">Te llevará a tu <b>link de admin</b>. Guárdalo: con él puedes sacar gente de la lista.</p>
 </section>
@@ -228,8 +238,9 @@
 <section id="convo" class="layout" hidden>
   <div class="aside">
     <header class="hero">
-      <span class="pill">⚽ Convocatoria</span>
+      <span class="pill" id="pill">⚽ Convocatoria</span>
       <h1 id="title"></h1>
+      <div class="meta" id="partidos" hidden></div>
       <div class="meta">
         <span class="chip" id="when"></span>
         <span class="chip" id="place"></span>
@@ -268,8 +279,20 @@
 
     <div id="adminBox" class="card admin" hidden>
       <b>🔑 Eres admin de esta convocatoria</b>
-      <p>Puedes sacar a cualquiera de la lista. Guarda <b>este</b> link y no lo compartas; al grupo mándale el normal con el botón verde.</p>
+      <p>Puedes sacar a cualquiera de la lista<span class="soloGrupo">, crear partidos extra y marcar multas pagadas</span>. Guarda <b>este</b> link y no lo compartas; al grupo mándale el normal con el botón verde.</p>
       <button id="copyAdmin" class="ghost">Copiar mi link de admin</button>
+      <details id="extraWrap" class="join soloGrupo" style="margin-top:14px">
+        <summary>⭐ Crear partido extra</summary>
+        <form id="fExtra" class="stack">
+          <div class="grid2">
+            <div><label class="f" for="xWhen">Fecha y hora</label>
+              <input id="xWhen" name="when" type="datetime-local" required></div>
+            <div><label class="f" for="xCupo">Cupos</label>
+              <input id="xCupo" name="cupo" type="number" min="2" max="60" inputmode="numeric" placeholder="Igual"></div>
+          </div>
+          <button class="full">Crear partido extra</button>
+        </form>
+      </details>
     </div>
 
     <div class="dock">
@@ -296,10 +319,15 @@
       <ol id="arqueros" class="list card"></ol>
     </div>
 
-    <details id="bajBox" class="bajas" hidden>
-      <summary id="bajSum"></summary>
+    <div id="bajBox" class="bajas" hidden>
+      <div class="sec"><h2>👋 Se bajaron</h2><span class="count" id="bajCount"></span></div>
       <ol id="bajas" class="list card"></ol>
-    </details>
+    </div>
+
+    <div id="deuBox" hidden>
+      <div class="sec"><h2>🍺 Deben cervezas</h2><span class="count" id="deuCount"></span></div>
+      <ol id="deudas" class="list card"></ol>
+    </div>
 
     <p class="note">Los del grupo tienen prioridad; los invitados van después aunque se apunten antes. Los 2 primeros puestos son solo para arqueros; los demás arqueros esperan en su fila. Si alguien se baja, el primer suplente sube solo.</p>
   </div>
@@ -310,8 +338,8 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, orderByChild, endAt, limitToFirst, get } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
-import { ordenar, yaEsta, fechaLarga, textoWhatsApp, ARQ } from './lista.js';
+import { getDatabase, ref, push, set, update, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js';
+import { ordenar, porConfirmar, yaEsta, fechaLarga, textoWhatsApp, ARQ, enZona, diaLocal, deudas, debe, CERVEZAS } from './lista.js';
 
 // Config público por diseño: la seguridad está en database.rules.json.
 const firebaseConfig = {
@@ -342,12 +370,6 @@ const db = getDatabase(app);
 await auth.authStateReady();
 const uid = (auth.currentUser || (await signInAnonymously(auth)).user).uid; // cuenta anónima e invisible: 1 por dispositivo
 
-// Limpieza: borra convocatorias de más de 14 días (las reglas solo dejan listar/borrar esas).
-// Margen de 1h por si el reloj del celular va adelantado. ponytail: corre en cada visita, sin cron ni servidor.
-get(query(ref(db, 'convos'), orderByChild('createdAt'), endAt(Date.now() - 14 * 864e5 - 36e5), limitToFirst(10)))
-  .then(s => { const u = {}; s.forEach(c => { for (const n of ['convos', 'keys', 'admins']) u[`${n}/${c.key}`] = null; }); return Object.keys(u).length && update(ref(db), u); })
-  .catch(() => {});
-
 const q = new URLSearchParams(location.search);
 const id = q.get('c');
 const adminKey = q.get('admin');
@@ -371,16 +393,23 @@ function crear() {
   const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); d.setHours(20, 0, 0, 0);
   $('cWhen').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
   for (const k of ['title', 'place', 'cupo']) if (store.get('ultima.' + k)) $('fCrear')[k].value = store.get('ultima.' + k);
+  // Semanal (lo normal) o una sola vez: solo el campo visible va en el formulario.
+  $('fCrear').onchange = () => {
+    const semanal = $('fCrear').modo.value === 'semanal';
+    $('cSemanal').hidden = $('cHora').disabled = !semanal;
+    $('cUnico').hidden = $('cWhen').disabled = semanal;
+  };
 
   $('fCrear').onsubmit = async e => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
     const nuevo = crypto.randomUUID().slice(0, 8), key = crypto.randomUUID();
+    const cuando = f.modo === 'semanal' ? { hora: f.hora, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } : { when: f.when };
     e.target.querySelector("button").disabled = true;
     try {
       await update(ref(db), {
         [`keys/${nuevo}`]: key,
-        [`convos/${nuevo}`]: { title: f.title.trim(), when: f.when, place: f.place.trim(), cupo: +f.cupo, createdAt: serverTimestamp() },
+        [`convos/${nuevo}`]: { title: f.title.trim(), ...cuando, place: f.place.trim(), cupo: +f.cupo, createdAt: serverTimestamp() },
       });
       for (const k of ['title', 'place', 'cupo']) store.set('ultima.' + k, f[k]);
       location.search = `?c=${nuevo}&admin=${key}`;
@@ -389,14 +418,42 @@ function crear() {
 }
 
 function ver() {
-  const shareUrl = `${location.origin}${location.pathname}?c=${id}`;
-  let isAdmin = false, convo = null, seen = null, yoAntes;
+  // convo = la convocatoria (grupo semanal con `hora`, o partido único con `when`); pa = el partido que se está viendo.
+  // En el grupo cada partido vive en convos/{id}/partidos/{pid}; en el único, los jugadores cuelgan de la convocatoria (pid = null).
+  let isAdmin = false, convo = null, seen = null, yoAntes, pid = q.get('p'), pa = null, base = '', ds = [], pend = new Set(), semanaPedida, abreT;
+  const shareUrl = () => `${location.origin}${location.pathname}?c=${id}` + (pa?.extra ? `&p=${pid}` : '');
+  const cupoDe = pa => pa.cupo || convo.cupo;
+  const texto = () => textoWhatsApp({ ...convo, when: pa.when, cupo: cupoDe(pa) }, ordenar(pa.players, cupoDe(pa)), shareUrl());
+  const elegir = k => { const u = new URL(location); u.searchParams.set('p', k); history.replaceState(null, '', u); pid = k; seen = null; render(); };
 
   if (adminKey) set(ref(db, `admins/${id}/${uid}`), adminKey)
     .then(() => { isAdmin = true; $('adminBox').hidden = false; if (convo) render(); })
     .catch(() => toast('Link de admin inválido'));
 
-  const avisar = () => api({ accion: 'notify', c: id }).catch(() => {});
+  $('fExtra').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, nuevo = 'x' + crypto.randomUUID().slice(0, 7);
+    const extra = { when: f.when.value, abre: serverTimestamp(), extra: true };
+    if (f.cupo.value) extra.cupo = +f.cupo.value;
+    try {
+      await set(ref(db, `convos/${id}/partidos/${nuevo}`), extra);
+      f.reset(); $('extraWrap').open = false; elegir(nuevo);
+      toast('Partido extra creado ⭐ Mándalo al grupo con el botón verde');
+    } catch (err) { toast('No se pudo crear: ' + err.message); }
+  };
+
+  const avisar = () => api({ accion: 'notify', c: id, ...(pid && { p: pid }) }).catch(() => {});
+
+  // Bajarse o sacar a alguien. El suplente que subió y aún no confirma suelta el cupo sin multa (no eligió jugar ese día).
+  function bajar(p) {
+    const libre = pend.has(p.id), yo = p.uid === uid;
+    const multa = !libre && convo.hora && diaLocal(Date.now(), convo.tz) === pa.when.slice(0, 10)
+      ? `\n\n⚠️ Hoy es día de partido: bajarse ahora son ${CERVEZAS} 🍺 de multa y no puede volver a apuntarse hasta pagarlas.` : '';
+    if (!confirm((yo ? `¿Seguro que te bajas${p.guestOf ? ' (' + p.name + ')' : ''}? Tu cupo pasa al siguiente.` : `¿Sacar a ${p.name} de la lista?`) + multa)) return;
+    update(ref(db, `${base}/players/${p.id}`), { out: serverTimestamp(), ...(libre && { sube: true }) })
+      .then(() => { avisar(); toast(yo ? 'Listo, te bajaste 👋' : `${p.name} fuera de la lista`); })
+      .catch(err => toast(err.message));
+  }
   navigator.serviceWorker?.register('/sw.js').catch(() => {});
   pintarAvisos();
 
@@ -461,12 +518,15 @@ function ver() {
     const f = e.target, name = f.name.value.trim(), guestOf = $('guestWrap').open ? f.guestOf.value.trim() : '';
     if (!name) return;
     if ($('guestWrap').open && !guestOf) return toast('Pon de quién es invitado');
-    if (yaEsta(convo.players, name)) return toast(`"${name}" ya está en la lista`);
+    if (Date.now() < pa.abre) return toast('La lista aún no se abre 🔒');
+    if (yaEsta(pa.players, name)) return toast(`"${name}" ya está en la lista`);
+    const d = debe(ds, name, guestOf ? '' : uid);
+    if (d) return toast(`🍺 ${d.name} debe ${CERVEZAS} cervezas: puede volver cuando el admin las marque pagadas`);
     const p = { name, arq: f.arq.checked, uid, ts: serverTimestamp() };
     if (guestOf) p.guestOf = guestOf; else store.set('nombre', name);
     $('joinBtn').disabled = true;
     try {
-      await push(ref(db, `convos/${id}/players`), p);
+      await push(ref(db, `${base}/players`), p);
       avisar();
       festejo($('joinBtn'));
       toast((guestOf ? `${name} apuntado como invitado 🎟️` : '¡Estás en la lista! ⚽') + (store.get('avisos.' + id) ? '' : ' Activa los avisos 🔔'));
@@ -475,7 +535,7 @@ function ver() {
     $('joinBtn').disabled = false;
   };
 
-  $('copyTxt').onclick = () => copiar(textoWhatsApp(convo, ordenar(convo.players, convo.cupo), shareUrl), 'Lista copiada, pégala en el grupo 📋');
+  $('copyTxt').onclick = () => copiar(texto(), 'Lista copiada, pégala en el grupo 📋');
 
   onValue(ref(db, `convos/${id}`), snap => {
     convo = snap.val();
@@ -486,31 +546,65 @@ function ver() {
       return;
     }
     if (adminKey || new URLSearchParams(store.get('ultimaSala')).get('c') !== id) store.set('ultimaSala', `?c=${id}` + (adminKey ? `&admin=${adminKey}` : ''));
+    if (convo.hora && !semanaPedida) { semanaPedida = 1; api({ accion: 'semana', c: id }).catch(() => {}); } // crea el partido del lunes si falta
     render();
   }, err => msg('Error: ' + err.message));
 
   function render() {
+    // Partidos que todavía no pasan (hasta 3h después de empezar), el más cercano primero.
+    const lista = convo.hora
+      ? Object.entries(convo.partidos || {}).map(([k, v]) => ({ ...v, pid: k }))
+        .filter(v => enZona(v.when, convo.tz) + 3 * 36e5 > Date.now()).sort((a, b) => a.when < b.when ? -1 : 1)
+      : [{ ...convo, pid: null, abre: 0 }];
+    pa = lista.find(v => v.pid === pid) || lista[0];
+    if (!pa) return msg('Preparando la lista de esta semana…');
+    if (pa.pid !== pid) { pid = pa.pid; seen = null; }
+    base = pid ? `convos/${id}/partidos/${pid}` : `convos/${id}`;
+    ds = convo.hora ? deudas(convo.partidos, convo.pagos, convo.tz) : [];
+    const cupo = cupoDe(pa);
     show('convo');
-    const r = ordenar(convo.players, convo.cupo);
-    const lleno = r.titulares.length >= convo.cupo;
-    document.title = `${convo.title} ⚽ ${r.titulares.length}/${convo.cupo}`;
+    for (const el of document.querySelectorAll('.soloGrupo')) el.hidden = !convo.hora;
+    $('pill').textContent = pa.extra ? '⭐ Partido extra' : convo.hora ? '🔁 Cada lunes' : '⚽ Convocatoria';
+    $('partidos').hidden = lista.length < 2;
+    $('partidos').replaceChildren(...lista.map(v => Object.assign(document.createElement('button'), {
+      className: 'chip' + (v.pid === pid ? ' sel' : ''),
+      textContent: (v.extra ? '⭐ ' : '') + new Date(v.when).toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }),
+      onclick: () => elegir(v.pid),
+    })));
+    const r = ordenar(pa.players, cupo);
+    const lleno = r.titulares.length >= cupo;
+    document.title = `${convo.title} ⚽ ${r.titulares.length}/${cupo}`;
     $('title').textContent = convo.title;
-    $('when').textContent = '📅 ' + fechaLarga(convo.when);
+    $('when').textContent = '📅 ' + fechaLarga(pa.when);
     $('place').textContent = '📍 ' + (convo.place || 'Por definir');
-    const cd = cuenta(convo.when);
+    const cd = cuenta(pa.when);
     $('countdown').hidden = !cd; $('countdown').textContent = cd;
-    $('cupos').innerHTML = `${r.titulares.length}<small> / ${convo.cupo}</small>`;
-    $('cuposLbl').textContent = lleno ? (r.suplentes.length ? `¡Completo! +${r.suplentes.length} en espera` : '¡Completo!') : `Faltan ${convo.cupo - r.titulares.length}`;
+    $('cupos').innerHTML = `${r.titulares.length}<small> / ${cupo}</small>`;
+    $('cuposLbl').textContent = lleno ? (r.suplentes.length ? `¡Completo! +${r.suplentes.length} en espera` : '¡Completo!') : `Faltan ${cupo - r.titulares.length}`;
     $('bar').classList.toggle('full', lleno);
-    $('bar').firstElementChild.style.width = Math.min(100, r.titulares.length / convo.cupo * 100) + '%';
-    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(textoWhatsApp(convo, r, shareUrl));
+    $('bar').firstElementChild.style.width = Math.min(100, r.titulares.length / cupo * 100) + '%';
+    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(texto());
+    const cerrado = Date.now() < pa.abre;
+    clearTimeout(abreT);
+    if (cerrado) abreT = setTimeout(render, Math.min(pa.abre - Date.now() + 1000, 2 ** 31 - 1)); // se abre sola, sin recargar
+    const miDeuda = ds.find(d => d.uid === uid && !d.guestOf);
+    pend = porConfirmar(pa.players, cupo);
 
     // Mi estado
     const yo = [...r.titulares.map((p, i) => ({ p, sup: false, n: i + 1 })), ...r.suplentes.map((p, i) => ({ p, sup: true, n: i + 1 })), ...r.arqueros.map((p, i) => ({ p, sup: true, n: i + 1, fila: true }))]
       .find(x => x.p.uid === uid && !x.p.guestOf);
     const st = $('status');
     st.hidden = false;
-    if (yo && !yo.sup) { st.className = 'status in'; st.innerHTML = `<span class="ico">✅</span><div>Estás dentro — titular #${yo.n}<small>Si no puedes ir, bájate desde la lista para que suba otro.</small></div>`; }
+    if (cerrado) { st.className = 'status wait'; st.innerHTML = `<span class="ico">🔒</span><div>La lista se abre el ${fechaHora(pa.abre)}<small>Cada miércoles a la 1:00 PM para el lunes. Vuelve a esa hora para apuntarte.</small></div>`; }
+    else if (miDeuda && !yo) { st.className = 'status wait'; st.innerHTML = `<span class="ico">🍺</span><div>Debes ${CERVEZAS} cervezas<small>Te bajaste el día del partido (${fechaHora(miDeuda.out)}). Cuando el admin las marque pagadas puedes volver a apuntarte.</small></div>`; }
+    else if (yo && !yo.sup && pend.has(yo.p.id)) {
+      st.className = 'status wait';
+      st.innerHTML = `<span class="ico">⬆️</span><div style="flex:1">¡Subiste a titular #${yo.n}! ¿Puedes ir?<small>Alguien se bajó y te tocó. Si no puedes, suelta el cupo sin multa para que suba el siguiente.</small>
+        <div class="opts" style="margin-top:8px"><button class="mini" id="voy">✅ Voy</button><button class="mini" id="noVoy">No puedo</button></div></div>`;
+      $('voy').onclick = () => update(ref(db, `${base}/players/${yo.p.id}`), { conf: true }).then(() => toast('¡Confirmado! ⚽')).catch(err => toast(err.message));
+      $('noVoy').onclick = () => bajar(yo.p);
+    }
+    else if (yo && !yo.sup) { st.className = 'status in'; st.innerHTML = `<span class="ico">✅</span><div>Estás dentro — titular #${yo.n}<small>Si no puedes ir, bájate desde la lista para que suba otro.</small></div>`; }
     else if (yo) { st.className = 'status wait'; st.innerHTML = `<span class="ico">⏳</span><div>Estás en espera — ${yo.fila ? 'fila de arqueros' : 'suplente'} #${yo.n}<small>Si alguien se baja, subes solo.</small></div>`; }
     else if (lleno) { st.className = 'status fullmsg'; st.innerHTML = `<span class="ico">🟡</span><div>La lista está llena<small>Si te apuntas quedas como suplente.</small></div>`; }
     else st.hidden = true;
@@ -522,22 +616,35 @@ function ver() {
       $('jName').value = soyYo ? '' : store.get('nombre');
       yoAntes = soyYo;
     }
-    $('joinBtn').textContent = lleno ? 'Apuntarme como suplente' : 'Apuntarme';
+    $('joinBtn').textContent = cerrado ? '🔒 Aún no se abre' : lleno ? 'Apuntarme como suplente' : 'Apuntarme';
+    $('joinBtn').disabled = cerrado;
 
     const tArq = r.titulares.filter(p => p.arq), tCampo = r.titulares.filter(p => !p.arq);
     const vacios = (n, arq) => Array.from({ length: Math.max(0, n) }, () => arq ? 'arq' : null);
-    $('titulares').replaceChildren(...[...tArq, ...vacios(ARQ - tArq.length, true), ...tCampo, ...vacios(convo.cupo - ARQ - tCampo.length)].map((p, i) => fila(p, i + 1)));
+    $('titulares').replaceChildren(...[...tArq, ...vacios(ARQ - tArq.length, true), ...tCampo, ...vacios(cupo - ARQ - tCampo.length)].map((p, i) => fila(p, i + 1)));
     $('arqueros').replaceChildren(...r.arqueros.map((p, i) => fila(p, 'A' + (i + 1))));
     $('arqCount').textContent = r.arqueros.length;
     $('arqBox').hidden = !r.arqueros.length;
     $('suplentes').replaceChildren(...r.suplentes.map((p, i) => fila(p, 'S' + (i + 1))));
     $('bajas').replaceChildren(...r.bajas.map(p => fila(p, '', true)));
-    $('titCount').textContent = `${r.titulares.length}/${convo.cupo}`;
+    $('titCount').textContent = `${r.titulares.length}/${cupo}`;
     $('supCount').textContent = r.suplentes.length;
     $('supBox').hidden = !r.suplentes.length;
     $('bajBox').hidden = !r.bajas.length;
-    $('bajSum').textContent = `Bajas (${r.bajas.length})`;
-    seen = new Set(Object.keys(convo.players || {}));
+    $('bajCount').textContent = r.bajas.length;
+    // Multas: públicas, de todos los partidos; solo el admin las marca pagadas.
+    $('deudas').replaceChildren(...ds.map(d => {
+      const li = fila(d, '🍺', true);
+      if (isAdmin) li.append(Object.assign(document.createElement('button'), {
+        className: 'mini', textContent: 'Pagó ✓',
+        onclick: () => confirm(`¿${d.name} ya pagó las ${CERVEZAS} 🍺?`) && set(ref(db, `convos/${id}/pagos/${d.key}`), true)
+          .then(() => toast(`${d.name} quedó al día 🍺`)).catch(err => toast(err.message)),
+      }));
+      return li;
+    }));
+    $('deuCount').textContent = ds.length;
+    $('deuBox').hidden = !ds.length;
+    seen = new Set(Object.keys(pa.players || {}));
   }
 
   function fila(p, n, baja) {
@@ -550,7 +657,7 @@ function ver() {
       li.onclick = () => { $('joinWrap').open = true; $('fJoin').arq.checked = !!p; $('jName').focus(); };
       return li;
     }
-    if (seen && !seen.has(p.id)) li.classList.add('nuevo');
+    if (!baja && seen && !seen.has(p.id)) li.classList.add('nuevo');
     const av = el('span', 'av', iniciales(p.name));
     av.style.background = color(p.name);
     if (p.arq) av.append(el('span', 'glove', '🧤'));
@@ -559,15 +666,14 @@ function ver() {
     if (p.uid === uid) { li.classList.add('mio'); sub.append(el('span', 'tag you', 'Tú')); }
     if (p.guestOf) sub.append(el('span', 'tag inv', 'Invitado de ' + p.guestOf));
     if (p.arq) sub.append(el('span', '', 'Arquero'));
-    sub.append(el('span', '', baja ? 'se bajó ' + hora(p.out) : hora(p.ts)));
+    if (!baja && pend.has(p.id)) sub.append(el('span', 'tag inv', '⏳ por confirmar'));
+    sub.append(el('span', '', baja ? 'se bajó ' + fechaHora(p.out) : hora(p.ts)));
+    if (baja && ds.some(d => d.key === (p.key || `${pid}~${p.id}`))) sub.append(el('span', 'tag inv', `🍺 debe ${CERVEZAS}`));
     who.append(el('b', '', p.name), sub);
     li.append(av, who);
     if (!baja && (p.uid === uid || isAdmin)) {
       const b = el('button', 'mini', p.uid === uid ? 'Bajarme' : 'Sacar');
-      b.onclick = () => confirm(p.uid === uid ? `¿Seguro que te bajas${p.guestOf ? ' (' + p.name + ')' : ''}? Tu cupo pasa al siguiente.` : `¿Sacar a ${p.name} de la lista?`) &&
-        update(ref(db, `convos/${id}/players/${p.id}`), { out: serverTimestamp() })
-          .then(() => { avisar(); toast(p.uid === uid ? 'Listo, te bajaste 👋' : `${p.name} fuera de la lista`); })
-          .catch(err => toast(err.message));
+      b.onclick = () => bajar(p);
       li.append(b);
     }
     return li;
@@ -577,6 +683,7 @@ function ver() {
 const iniciales = s => s.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const color = s => { let h = 0; for (const c of s) h = (h * 31 + c.codePointAt(0)) % 360; return `hsl(${h} 55% 42%)`; };
 const hora = t => t ? new Date(t).toLocaleString('es', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : 'ahora';
+const fechaHora = t => t ? new Date(t).toLocaleString('es', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'ahora';
 function cuenta(when) {
   const d = new Date(when); if (isNaN(d)) return '';
   const dia = x => new Date(x.getFullYear(), x.getMonth(), x.getDate());
