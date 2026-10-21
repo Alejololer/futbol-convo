@@ -11,7 +11,7 @@ export function ordenar(players, cupo) {
   const ts = p => p.ts ?? Infinity; // ts pendiente (escritura local aún sin confirmar) va al final
   const activos = todos
     .filter(p => !p.out)
-    .sort((a, b) => !!a.guestOf - !!b.guestOf || ts(a) - ts(b)); // grupo primero, luego invitados
+    .sort((a, b) => !!a.guestOf - !!b.guestOf || ts(a) - ts(b) || (a.id < b.id ? -1 : 1)); // grupo primero, luego invitados; empate por pushId
   const arq = activos.filter(p => p.arq), campo = activos.filter(p => !p.arq);
   return {
     titulares: [...arq.slice(0, ARQ), ...campo.slice(0, cupo - ARQ)], // puestos 1..ARQ solo arqueros
