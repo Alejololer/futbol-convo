@@ -281,6 +281,15 @@
       <b>🔑 Eres admin de esta convocatoria</b>
       <p>Puedes sacar a cualquiera de la lista<span class="soloGrupo">, crear partidos extra y marcar multas pagadas</span>. Guarda <b>este</b> link y no lo compartas; al grupo mándale el normal con el botón verde.</p>
       <button id="copyAdmin" class="ghost">Copiar mi link de admin</button>
+      <details id="lugarWrap" class="join" style="margin-top:14px">
+        <summary>📍 Cambiar lugar</summary>
+        <form id="fLugar" class="stack">
+          <div><label class="f" for="lPlace">Lugar</label>
+            <input id="lPlace" name="place" type="text" maxlength="80" placeholder="Por definir"></div>
+          <label class="toggle soloGrupo"><input name="solo" type="checkbox" checked> Solo este partido</label>
+          <button class="full">Guardar lugar</button>
+        </form>
+      </details>
       <details id="extraWrap" class="join soloGrupo" style="margin-top:14px">
         <summary>⭐ Crear partido extra</summary>
         <form id="fExtra" class="stack">
@@ -423,7 +432,7 @@ function ver() {
   let isAdmin = false, convo = null, seen = null, yoAntes, pid = q.get('p'), pa = null, base = '', ds = [], pend = new Set(), semanaPedida, abreT;
   const shareUrl = () => `${location.origin}${location.pathname}?c=${id}` + (pa?.extra ? `&p=${pid}` : '');
   const cupoDe = pa => pa.cupo || convo.cupo;
-  const texto = () => textoWhatsApp({ ...convo, when: pa.when, cupo: cupoDe(pa) }, ordenar(pa.players, cupoDe(pa)), shareUrl());
+  const texto = () => textoWhatsApp({ ...convo, when: pa.when, cupo: cupoDe(pa), place: lugarDe(pa) }, ordenar(pa.players, cupoDe(pa)), shareUrl());
   const elegir = k => { const u = new URL(location); u.searchParams.set('p', k); history.replaceState(null, '', u); pid = k; seen = null; render(); };
 
   if (adminKey) set(ref(db, `admins/${id}/${uid}`), adminKey)
@@ -440,6 +449,19 @@ function ver() {
       f.reset(); $('extraWrap').open = false; elegir(nuevo);
       toast('Partido extra creado ⭐ Mándalo al grupo con el botón verde');
     } catch (err) { toast('No se pudo crear: ' + err.message); }
+  };
+
+  // Lugar: en el grupo, "solo este partido" guarda una excepción en el partido (vacío = vuelve al de siempre); si no, cambia el de la convocatoria.
+  const lugarDe = pa => pa.place ?? convo.place;
+  $('lugarWrap').ontoggle = () => { if ($('lugarWrap').open) $('fLugar').place.value = lugarDe(pa) || ''; };
+  $('fLugar').onsubmit = async e => {
+    e.preventDefault();
+    const v = e.target.place.value.trim(), solo = pid && e.target.solo.checked;
+    try {
+      await set(ref(db, solo ? `${base}/place` : `convos/${id}/place`), solo ? v || null : v);
+      $('lugarWrap').open = false;
+      toast(solo ? 'Lugar cambiado solo para este partido 📍' : 'Lugar cambiado 📍');
+    } catch (err) { toast('No se pudo cambiar: ' + err.message); }
   };
 
   const avisar = () => api({ accion: 'notify', c: id, ...(pid && { p: pid }) }).catch(() => {});
@@ -576,7 +598,7 @@ function ver() {
     document.title = `${convo.title} ⚽ ${r.titulares.length}/${cupo}`;
     $('title').textContent = convo.title;
     $('when').textContent = '📅 ' + fechaLarga(pa.when);
-    $('place').textContent = '📍 ' + (convo.place || 'Por definir');
+    $('place').textContent = '📍 ' + (lugarDe(pa) || 'Por definir');
     const cd = cuenta(pa.when);
     $('countdown').hidden = !cd; $('countdown').textContent = cd;
     $('cupos').innerHTML = `${r.titulares.length}<small> / ${cupo}</small>`;

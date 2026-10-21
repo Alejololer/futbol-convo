@@ -19,6 +19,7 @@
           ".validate": "newData.isString() && newData.val().length <= 30"
         },
         "place": {
+          ".write": "auth != null && root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()",
           ".validate": "newData.isString() && newData.val().length <= 80"
         },
         "cupo": {
@@ -81,6 +82,10 @@
             },
             "extra": {
               ".validate": "newData.val() == true"
+            },
+            "place": {
+              ".write": "auth != null && root.child('keys/' + $id).exists() && root.child('admins/' + $id + '/' + auth.uid).val() == root.child('keys/' + $id).val()",
+              ".validate": "newData.isString() && newData.val().length <= 80"
             },
             "players": {
               "$p": {
